@@ -30,13 +30,16 @@ begin
   for t in select c.relname from pg_class c join pg_namespace s on s.oid = c.relnamespace
             where s.nspname = 'public' and c.relkind in ('r', 'p')
               and c.relname not in ('business', 'location', 'gl_account', 'app_user', 'user_role', 'audit_log',
-                                    'role_permission', 'reason_code', 'delivery_platform', 'cash_drawer')
+                                    'role_permission', 'reason_code', 'delivery_platform', 'cash_drawer',
+                                    -- Every business kept each part on as plans came (0108).
+                                    'business_part')
   loop
     execute format('select count(*) from public.%I', t) into n;
     perform test.eq(n, 0::bigint, t || ' is empty');
   end loop;
 end $$;
-select test.eq((select count(*) from reason_code)::int, 20, 'the upgrade brings only the list of reasons (0028)');
+select test.eq((select count(*) from reason_code)::int, 21,
+  'the upgrade brings only the list of reasons (0028, and 0106''s sale day)');
 select test.eq((select string_agg(code, ',' order by code) from delivery_platform), 'careem,talabat,toters',
   'and the delivery platforms sales are matched to (0030)');
 select test.eq((select count(*) from cash_drawer where business_id = :biz)::int, 2, 'and a drawer at each location (0036)');

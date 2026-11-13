@@ -15,6 +15,8 @@ export interface NavEntry {
   group: string | null;
   /** The screen is offered to anyone holding at least one of these; none: to everyone. */
   anyOf: Permission[];
+  /** The part of the system it belongs to (0108): hidden while that part is off. */
+  part?: string;
 }
 
 const REVENUE = "nav.group.revenue";
@@ -39,13 +41,25 @@ export const NAV: NavEntry[] = [
   // Who buys from the café, and their points (0050).
   { group: REVENUE, href: "/customers", key: "nav.customers", anyOf: ["customer.view"] },
 
-  { group: SPENDING, href: "/vendors", key: "nav.vendors", anyOf: ["cost.view"] },
+  {
+    group: SPENDING,
+    href: "/vendors",
+    key: "nav.vendors",
+    anyOf: ["cost.view"],
+    part: "purchasing",
+  },
   { group: SPENDING, href: "/expenses", key: "nav.expenses", anyOf: ["cost.view"] },
-  { group: SPENDING, href: "/purchasing", key: "nav.purchasing", anyOf: ["cost.view"] },
+  {
+    group: SPENDING,
+    href: "/purchasing",
+    key: "nav.purchasing",
+    anyOf: ["cost.view"],
+    part: "purchasing",
+  },
   // Salaries, a month at a time, and advances (0049).
-  { group: SPENDING, href: "/payroll", key: "nav.payroll", anyOf: ["payroll.view"] },
+  { group: SPENDING, href: "/payroll", key: "nav.payroll", anyOf: ["payroll.view"], part: "staff" },
 
-  { group: OPERATIONS, href: "/pos", key: "nav.pos", anyOf: ["sale.create"] },
+  { group: OPERATIONS, href: "/pos", key: "nav.pos", anyOf: ["sale.create"], part: "till" },
   // The start and the end of the day, step by step: whoever opens and closes the day.
   { group: OPERATIONS, href: "/start-of-day", key: "nav.startOfDay", anyOf: ["day.close"] },
   { group: OPERATIONS, href: "/end-of-day", key: "nav.endOfDay", anyOf: ["day.close"] },
@@ -71,12 +85,14 @@ export const NAV: NavEntry[] = [
     href: "/inventory/transfers",
     key: "nav.transfers",
     anyOf: ["stock.transfer"],
+    part: "branches",
   },
   {
     group: OPERATIONS,
     href: "/production",
     key: "nav.production",
     anyOf: ["cost.view", "production.record"],
+    part: "recipes",
   },
   // Who works here, the schedule and the hours (0049).
   {
@@ -84,10 +100,17 @@ export const NAV: NavEntry[] = [
     href: "/staff",
     key: "nav.staff",
     anyOf: ["staff.manage", "attendance.edit", "payroll.view"],
+    part: "staff",
   },
 
-  { group: BOOKS, href: "/journals", key: "nav.journals", anyOf: ["cost.view"] },
-  { group: BOOKS, href: "/accounting", key: "nav.chart", anyOf: ["cost.view"] },
+  {
+    group: BOOKS,
+    href: "/journals",
+    key: "nav.journals",
+    anyOf: ["cost.view"],
+    part: "accounting",
+  },
+  { group: BOOKS, href: "/accounting", key: "nav.chart", anyOf: ["cost.view"], part: "accounting" },
   { group: BOOKS, href: "/reports", key: "nav.reports", anyOf: ["cost.view"] },
   { group: BOOKS, href: "/audit", key: "nav.audit", anyOf: ["audit.view"] },
   { group: BOOKS, href: "/settings", key: "nav.settings", anyOf: ["settings.manage"] },
@@ -204,10 +227,27 @@ export function activeHref(pathname: string | null, hrefs: readonly string[]): s
   return best;
 }
 
+/**
+ * Whether a part of the system is on for their business (0108): the profile
+ * names each part that is off ("off:accounting"); a profile from before
+ * 0108 names none, and every part is on.
+ */
+export function partOn(permissions: readonly string[], part: string | undefined): boolean {
+  return !part || !permissions.includes(`off:${part}`);
+}
+
+/** Whether the menu offers them a screen: they may open it, and its part is on. */
+export function offered(
+  permissions: readonly string[],
+  entry: { anyOf: readonly string[]; part?: string },
+): boolean {
+  return holdsAny(permissions, entry.anyOf) && partOn(permissions, entry.part);
+}
+
 /** Whether the menu offers them this screen. */
 export function mayOpen(permissions: readonly string[], href: string): boolean {
   const entry = NAV.find((n) => n.href === href);
-  return entry !== undefined && holdsAny(permissions, entry.anyOf);
+  return entry !== undefined && offered(permissions, entry);
 }
 
 /**

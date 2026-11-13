@@ -71,6 +71,13 @@ import {
   discountAmount,
   discountParams,
   discountWhy,
+  biggerDiscount,
+  isSaleDayDiscount,
+  keepSaleDay,
+  saleDayDiscount,
+  type TillSaleDay,
+  defaultPacking,
+  type PackingSetup,
   newBill,
   orderDue,
   orderFromBill,
@@ -174,6 +181,8 @@ interface Pending {
   tip?: number | null;
   noService?: boolean;
   service?: number;
+  /** What the order went out in (0107), sent again with the retry; null for the defaults. */
+  packing?: { itemId: string; qty: number }[] | null;
 }
 
 /** What a waiting payment comes to: the products, the service charge and the tip (0090). */
@@ -229,6 +238,7 @@ function loadPending(): Pending | null {
       tip: p.tip ?? null,
       noService: p.noService ?? false,
       service: p.service ?? 0,
+      packing: Array.isArray(p.packing) ? p.packing : null,
     };
   } catch {
     return null;
@@ -274,6 +284,8 @@ async function fetchMenu(): Promise<{
   deals: Deal[] | null;
   nextChange: string | null;
   marks: UseByMark[] | null;
+  /** The sale day on now (0106): undefined before 0106, null when none. */
+  saleDay?: TillSaleDay | null;
 } | null> {
   const body = await fetchJson<{
     ok?: boolean;
@@ -282,6 +294,7 @@ async function fetchMenu(): Promise<{
     deals?: Deal[];
     nextChange?: string | null;
     marks?: UseByMark[];
+    saleDay?: TillSaleDay | null;
   }>("/api/pos/menu");
   return body?.ok && Array.isArray(body.items) && body.items.length > 0
     ? {
@@ -290,6 +303,7 @@ async function fetchMenu(): Promise<{
         deals: Array.isArray(body.deals) ? body.deals : null,
         nextChange: body.nextChange ?? null,
         marks: Array.isArray(body.marks) ? body.marks : null,
+        ...(body.saleDay !== undefined ? { saleDay: body.saleDay } : {}),
       }
     : null;
 }
@@ -389,7 +403,7 @@ export function PosClient({
   cashierName,
   timezone,
   canDiscount,
-  discountRules,
+  discountRules: ownDiscountRules,
   money,
   initialDrawer,
   fx = null,
@@ -407,6 +421,8 @@ export function PosClient({
   service = null,
   receiptSetup = null,
   offlineKey = null,
+  saleDay: initialSaleDay = null,
+  packing = null,
 }: {
   items: PosItem[];
   /** The meal deals on now (0089), and when the menu next changes by itself. */
@@ -462,6 +478,10 @@ export function PosClient({
   receiptSetup?: ReceiptSetup | null;
   /** The café's key for what this till keeps on the device (0101); null before it. */
   offlineKey?: string | null;
+  /** The sale day on now (0106): its discount is given by itself; null when none. */
+  saleDay?: TillSaleDay | null;
+  /** The café's packing (0107): the pay screen's + / − row; null before it, or with none set up. */
+  packing?: PackingSetup | null;
 }) {
   const { t, msg: say, locale } = useT();
   const router = useRouter();
@@ -476,6 +496,7 @@ export function PosClient({
   const [deals, setDeals] = useState<Deal[]>(initialDeals);
   const [nextChange, setNextChange] = useState<string | null>(initialNextChange);
   const [marks, setMarks] = useState<UseByMark[]>(initialMarks);
+  const [saleDay, setSaleDay] = useState<TillSaleDay | null>(initialSaleDay);
   const [dealing, setDealing] = useState<Deal | null>(null);
   const menu = useMemo(() => addonMenu(addons), [addons]);
   // The channels in use that sell something: a platform the café added is one more tab.
@@ -543,6 +564,29 @@ export function PosClient({
   const [autoPrint, setAutoPrint] = useState(false);
   const [ticketOn, setTicketOn] = useState(true);
   const [now, setNow] = useState(() => Date.now());
+  // The packing items the pay screen counts (0107), by their names in this language.
+  const packingItems = useMemo(
+    () =>
+      (packing?.items ?? [])
+        .filter((i) => i.active)
+        .map((i) => ({
+          itemId: i.itemId,
+          name:
+            (locale === "ar" ? i.nameAr : locale === "ckb" ? i.nameCkb : null)?.trim() || i.name,
+        })),
+    [packing, locale],
+  );
+  // The sale day while it is on (0106): it ends by itself, and the till with it.
+  const saleDayOn =
+    saleDay && (!saleDay.endsAt || Date.parse(saleDay.endsAt) > now) ? saleDay : null;
+  // While a sale day is on, its percentage needs nobody's approval (0106).
+  const discountRules = useMemo<DiscountRules>(
+    () =>
+      saleDayOn
+        ? { ...ownDiscountRules, cap: Math.max(ownDiscountRules.cap, saleDayOn.percent) }
+        : ownDiscountRules,
+    [ownDiscountRules, saleDayOn],
+  );
   // The oldest sale this till keeps, in minutes (0099): long, and the strip says so.
   const oldestKept = offline.length
     ? Math.floor((now - Math.min(...offline.map((s) => Date.parse(s.soldAt) || now))) / 60000)
@@ -620,6 +664,7 @@ export function PosClient({
         if (fresh.addons) setAddons(fresh.addons);
         if (fresh.deals) setDeals(fresh.deals);
         if (fresh.marks) setMarks(fresh.marks);
+        if (fresh.saleDay !== undefined) setSaleDay(fresh.saleDay);
         setNextChange(fresh.nextChange);
       }
     };
@@ -640,6 +685,17 @@ export function PosClient({
     };
   }, []);
 
+  // A sale day begun or over, or the prices changed (0106): the order's sale-day
+  // discount follows, unless the cashier gave another.
+  useEffect(() => {
+    if (pending || busy) return;
+    if (showBill && billRef.current) {
+      const next = withSaleDay(billRef.current);
+      if (next !== billRef.current) putBill(next);
+    } else setQuick((o) => withSaleDay(o));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [saleDayOn?.id, saleDayOn?.percent, items]);
+
   // The menu changes by itself at the hour (0089): an hour's price, a section
   // shown, a deal on. Asked for again just after that moment.
   useEffect(() => {
@@ -653,6 +709,7 @@ export function PosClient({
       if (fresh.addons) setAddons(fresh.addons);
       if (fresh.deals) setDeals(fresh.deals);
       if (fresh.marks) setMarks(fresh.marks);
+      if (fresh.saleDay !== undefined) setSaleDay(fresh.saleDay);
       setNextChange(fresh.nextChange);
     }, wait);
     return () => window.clearTimeout(timer);
@@ -930,7 +987,12 @@ export function PosClient({
     return {
       subtotal: subtotal.toNumber(),
       discount: discount.toNumber(),
-      discountLabel: pct && discount.gt(0) ? `${pct.toString()}%` : null,
+      discountLabel:
+        isSaleDayDiscount(o.discount) && discount.gt(0)
+          ? (o.discount?.note ?? null)
+          : pct && discount.gt(0)
+            ? `${pct.toString()}%`
+            : null,
       service: charge.toNumber(),
       servicePercent: sp,
       total: subtotal.minus(discount).plus(charge).toNumber(),
@@ -938,9 +1000,13 @@ export function PosClient({
   };
 
   // ------------------------------------------------------------ the order
+  /** The sale day's discount on an order (0106), as it stands now. */
+  const saleDayFor = (o: Order) => saleDayDiscount(o, byId, money, menu, saleDayOn);
+  /** Every change keeps the sale day's discount up to date, unless the cashier gave another. */
+  const withSaleDay = (o: Order) => keepSaleDay(o, saleDayFor(o));
   function patchOrder(fn: (o: Order) => Order) {
-    if (showBill && billRef.current) putBill(fn(billRef.current));
-    else setQuick(fn);
+    if (showBill && billRef.current) putBill(withSaleDay(fn(billRef.current)));
+    else setQuick((o) => withSaleDay(fn(o)));
   }
   function add(variantId: string, chosen: AddonChoice[] = [], qty = 1) {
     if (pending || busy) return;
@@ -1554,7 +1620,18 @@ export function PosClient({
       });
       return;
     }
-    let o = order;
+    // Never two discounts: the sale day's when it is bigger than the cashier's (0106).
+    const settled = biggerDiscount(
+      order,
+      saleDayFor(order),
+      orderSubtotal(order, byId, money, menu),
+      money,
+    );
+    if (settled !== order) {
+      if (showBill && billRef.current) putBill(settled);
+      else setQuick(settled);
+    }
+    let o = settled;
     if (o.kind === "bill" && !offlineSale) {
       const saved = await current();
       if (!saved) return;
@@ -1571,9 +1648,11 @@ export function PosClient({
           available: r.data.rewards,
           value: r.data.rewardValue,
           each: r.data.rewardPoints,
-          blocked: o.discount
-            ? "A reward is the bill's discount: take the other discount off first"
-            : null,
+          blocked: isSaleDayDiscount(o.discount)
+            ? "No reward is taken on a sale day: the sale day's discount is the bill's"
+            : o.discount
+              ? "A reward is the bill's discount: take the other discount off first"
+              : null,
         };
       }
     }
@@ -1649,6 +1728,7 @@ export function PosClient({
       tip: extras.tip > 0 ? extras.tip : null,
       noService: extras.noService,
       service: extras.service,
+      packing: extras.packing ?? null,
       job: {
         kind: "receipt",
         title: dialog.title,
@@ -1709,6 +1789,7 @@ export function PosClient({
               rewards: p.rewards ?? null,
               tip: p.tip ?? null,
               noService: p.noService ?? false,
+              packing: p.packing ?? null,
             })
           : await payBillAction({
               tabId: p.tabId!,
@@ -1720,6 +1801,7 @@ export function PosClient({
               rewards: p.rewards ?? null,
               tip: p.tip ?? null,
               noService: p.noService ?? false,
+              packing: p.packing ?? null,
             });
       if (!r.ok && r.uncertain) {
         // No answer from the database: it may have been recorded. A quick sale
@@ -1858,6 +1940,7 @@ export function PosClient({
         if (fresh.addons) setAddons(fresh.addons);
         if (fresh.deals) setDeals(fresh.deals);
         if (fresh.marks) setMarks(fresh.marks);
+        if (fresh.saleDay !== undefined) setSaleDay(fresh.saleDay);
         setNextChange(fresh.nextChange);
       }
       if (list) applyRef.current(list);
@@ -2384,6 +2467,16 @@ export function PosClient({
             {preOpen > 0 && <span className="chip-n">{preOpen}</span>}
           </button>
         )}
+        {saleDayOn && (
+          <span
+            className="strip-chip sale-day-chip"
+            data-testid="sale-day-banner"
+            title={t("The sale day's discount is given by itself")}
+          >
+            <Icon name="bolt" size={16} />{" "}
+            {t("{name}: {n}% off", { name: saleDayOn.name, n: saleDayOn.percent })}
+          </span>
+        )}
         <OfflineStrip
           connected={connected}
           waiting={held.waiting}
@@ -2593,6 +2686,11 @@ export function PosClient({
           }
           tips={service !== null && !isPlatform(dialog.order.channel)}
           decimals={money.decimals}
+          packing={
+            !dialog.offline && packingItems.length > 0
+              ? { items: packingItems, start: defaultPacking(dialog.order, packing) }
+              : null
+          }
           onConfirm={confirmPay}
           onClose={() => setDialog(null)}
         />

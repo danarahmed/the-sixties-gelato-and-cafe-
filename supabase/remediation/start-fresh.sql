@@ -81,6 +81,13 @@ insert into fresh_keep
 select t from (values ('member_device'), ('system_admin'), ('speed_sample'), ('business_offline_key'),
                       ('tax_setup')) v(t)
  where to_regclass('public.' || t) is not null;
+-- The business's own switches for its parts (0108) are settings: kept.
+insert into fresh_keep
+select t from (values ('business_part')) v(t) where to_regclass('public.' || t) is not null;
+-- Who gave the system's support access, and each visit (0109), are kept, as the audit trail is.
+insert into fresh_keep
+select t from (values ('support_grant'), ('support_twin'), ('support_visit')) v(t)
+ where to_regclass('public.' || t) is not null;
 
 do $$
 begin
@@ -156,6 +163,11 @@ begin
        || case when to_regclass('public.alert_refresh') is not null then ', alert_refresh' else '' end
        || case when to_regclass('public.till_kept') is not null then ', till_kept' else '' end
        || case when to_regclass('public.fx_revaluation') is not null then ', fx_revaluation' else '' end
+       -- The sale days (0106).
+       || case when to_regclass('public.sale_day') is not null then ', sale_day' else '' end
+       -- The packing (0107): which items, what each size goes out in, and each order's.
+       || case when to_regclass('public.sales_order_packing') is not null
+               then ', packing_item, variant_packing, sales_order_packing' else '' end
        || ' restart identity';
 end $$;
 

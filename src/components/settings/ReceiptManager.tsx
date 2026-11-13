@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   clearReceiptLogoAction,
@@ -127,14 +127,21 @@ export function ReceiptManager({ setup, timezone }: { setup: ReceiptSetup; timez
     at: new Date().toISOString(),
     by: t("Cashier"),
   };
-  const when = new Intl.DateTimeFormat("en-GB", {
-    timeZone: timezone,
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date());
+  // The time on the preview, read once the page is in the browser: worked out
+  // on the server too, a page sent just before a minute turns would not match.
+  const [when, setWhen] = useState("");
+  useEffect(() => {
+    setWhen(
+      new Intl.DateTimeFormat("en-GB", {
+        timeZone: timezone,
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }).format(new Date()),
+    );
+  }, [timezone]);
 
   return (
     <div className="receipt-setup" data-testid="receipt-setup">

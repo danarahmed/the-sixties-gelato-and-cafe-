@@ -36,7 +36,7 @@ select test.eq((select string_agg(m.name || ' ' || m.account_code || ' ' || a.na
                   join gl_account a on a.business_id = m.business_id and a.code = m.account_code),
   'FIB 1030 FIB', 'the ways to pay are kept, with their accounts');
 select test.eq((select count(*) from money_move)::int, 0, 'but not the money moved out of them');
-select test.eq((select count(*) from reason_code)::int, 20, 'the list of reasons is kept');
+select test.eq((select count(*) from reason_code)::int, 21, 'the list of reasons is kept (0028, and 0106''s sale day)');
 select test.eq((select string_agg(code || ' ' || name, ', ') from app_language), 'tr Türkçe', 'the languages the café added are kept');
 select test.eq((select string_agg(locale || ' ' || words, ', ' order by locale) from app_phrase), 'ar احفظ, tr Kaydet',
   'and its own words for phrases');

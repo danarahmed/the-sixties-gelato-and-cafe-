@@ -36,6 +36,7 @@ export type MovementType =
   | "expired"
   | "production_waste"
   | "preparation_waste"
+  | "packing"
   | "reversal";
 
 /** +1 = increases stock, -1 = decreases stock. */
@@ -61,6 +62,7 @@ export const MOVEMENT_SIGN: Record<MovementType, 1 | -1> = {
   expired: -1,
   production_waste: -1,
   preparation_waste: -1,
+  packing: -1, // what an order went out in (0107)
   reversal: 1, // sign carried by the reversed magnitude
 };
 

@@ -3,6 +3,7 @@ import { getPosAddons, getPosCatalogue } from "@/lib/db/pos";
 import { tillChoice } from "@/lib/place";
 import { getMenuNextChange, getPosDeals } from "@/lib/db/deals";
 import { getTillMarks } from "@/lib/db/useBy";
+import { getSaleDayNow } from "@/lib/db/saleDays";
 
 export const dynamic = "force-dynamic";
 
@@ -16,15 +17,29 @@ export async function GET() {
   const headers = { "Cache-Control": "private, no-store" };
   try {
     const { at } = await tillChoice();
-    const [items, addons, deals, nextChange, marks] = await Promise.all([
+    const [items, addons, deals, nextChange, marks, saleDay] = await Promise.all([
       getPosCatalogue(at),
       getPosAddons(at),
       getPosDeals(at),
       getMenuNextChange(at),
       // What is near or past its use-by (0098); none before it.
       getTillMarks(at),
+      // The sale day on now (0106); none before it.
+      getSaleDayNow(),
     ]);
-    return NextResponse.json({ ok: true, items, addons, deals, nextChange, marks }, { headers });
+    const till = saleDay
+      ? {
+          id: saleDay.id,
+          name: saleDay.name,
+          percent: saleDay.percent,
+          excludedCategories: saleDay.excludedCategories,
+          endsAt: saleDay.endsAt,
+        }
+      : null;
+    return NextResponse.json(
+      { ok: true, items, addons, deals, nextChange, marks, saleDay: till },
+      { headers },
+    );
   } catch {
     return NextResponse.json({ ok: false }, { status: 503, headers });
   }

@@ -78,23 +78,25 @@ Whose name is on the app.
 
 Nothing is removed and no "small version" is ever built or kept apart. Every
 café runs the same app and the same database; a small café has some parts
-switched off. (Not built yet: there are no plans or feature switches today.)
+switched off. (Built in `0108`: the plan, the type of business and the parts;
+the administrators' screen is Settings → Businesses and plans.)
 
 **How it works:**
+
 1. **One system, one code, for everyone.**
 2. **Each café has a plan** (for example Starter, Complete, Business), and a list
    says which parts each plan includes:
 
-   | Part | Starter | Complete | Business |
-   |---|---|---|---|
-   | Till, menu, tables, offline sales | ✅ | ✅ | ✅ |
-   | Stock, counts, daily reports, help, practice | ✅ | ✅ | ✅ |
-   | Recipes and costing, production, use-by | – | ✅ | ✅ |
-   | Purchasing and suppliers | – | ✅ | ✅ |
-   | Staff, clock-in, payroll | – | ✅ | ✅ |
-   | Full accounting screens (journals, bank, balance sheet) | – | ✅ | ✅ |
-   | Several branches, central kitchen, transfers | – | – | ✅ |
-   | Priority support, on-site setup | – | – | ✅ |
+   | Part                                                    | Starter | Complete | Business |
+   | ------------------------------------------------------- | ------- | -------- | -------- |
+   | Till, menu, tables, offline sales                       | ✅      | ✅       | ✅       |
+   | Stock, counts, daily reports, help, practice            | ✅      | ✅       | ✅       |
+   | Recipes and costing, production, use-by                 | –       | ✅       | ✅       |
+   | Purchasing and suppliers                                | –       | ✅       | ✅       |
+   | Staff, clock-in, payroll                                | –       | ✅       | ✅       |
+   | Full accounting screens (journals, bank, balance sheet) | –       | ✅       | ✅       |
+   | Several branches, central kitchen, transfers            | –       | –        | ✅       |
+   | Priority support, on-site setup                         | –       | –        | ✅       |
 
 3. **Switched off in two places:** the screens do not show what the plan does
    not include (a simpler app, easier to learn), and the database refuses those
@@ -110,10 +112,11 @@ right, since they read the same complete records; and a downgrade loses
 nothing (the hidden parts become hidden or read-only, and return on upgrade).
 
 **Another way to divide plans:** by size (branches, tills, how far back reports
-go). Recommended: by parts *and* by branches, as in the table, since a small
+go). Recommended: by parts _and_ by branches, as in the table, since a small
 café does not need payroll or a central kitchen, and a simpler app suits it.
 
 **What it takes to build (a moderate job, not a rebuild):**
+
 - a plan on each café, and the list of what each plan includes;
 - the menus and pages reading that list;
 - the database checking it, in the same place it already checks permissions;

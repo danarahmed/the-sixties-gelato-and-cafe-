@@ -26,6 +26,7 @@ import {
   payments,
   rewardsTaken,
   extrasToDb,
+  packingToDb,
   saleExtras,
 } from "@/lib/validation";
 import type { SaleReceipt } from "@/lib/actions/sales";
@@ -220,6 +221,7 @@ export async function payBillAction(
     p_address: v.data.addressId ?? null,
     p_rewards: v.data.rewards,
     ...extrasToDb(v.data),
+    ...packingToDb(v.data),
   });
   if (!r.ok) return r;
   refresh(...PAID_PATHS);

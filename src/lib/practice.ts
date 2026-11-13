@@ -10,6 +10,14 @@ export const PRACTICE_COOKIE = "sixties_practice";
 /** The header every database call carries while practising. */
 export const PRACTICE_HEADER = "x-sixties-practice";
 
+/**
+ * Support (0109): while this cookie holds a business's id, a system
+ * administrator's calls say so, and the database answers as that business's
+ * read-only support member, only while its owner allows it.
+ */
+export const SUPPORT_COOKIE = "sixties_support";
+export const SUPPORT_HEADER = "x-sixties-support";
+
 export interface PracticeTaskInfo {
   /** What to do, as a phrase. */
   title: string;

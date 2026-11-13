@@ -2,7 +2,7 @@ import { Fragment } from "react";
 import Link from "next/link";
 import { getT } from "@/lib/i18n/server";
 import { Rich } from "@/lib/i18n/Rich";
-import { has, requirePermission } from "@/lib/auth/session";
+import { has, requirePart, requirePermission } from "@/lib/auth/session";
 import { getItems, getItemsOutOfUse, getReceipts, getSuppliers } from "@/lib/db/read";
 import { getItemsKeeping } from "@/lib/db/useBy";
 import { getItemCosts } from "@/lib/db/reports";
@@ -25,6 +25,7 @@ export const dynamic = "force-dynamic";
 
 export default async function PurchasingPage() {
   const profile = await requirePermission("cost.view");
+  requirePart(profile, "purchasing");
   const t = await getT();
   // A delivery entered wrong is corrected, or reversed, by whoever approves stock adjustments (0038).
   const canCorrect = has(profile, "inventory.adjust.approve");

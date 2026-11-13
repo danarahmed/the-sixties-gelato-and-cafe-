@@ -1,12 +1,13 @@
 "use client";
 
 import { stopPracticeAction } from "@/lib/actions/practice";
+import { leaveSupportAction } from "@/lib/actions/support";
 import { use, useState, useEffect, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useT } from "@/lib/i18n/I18nProvider";
 import type { Locale } from "@/lib/i18n/core";
-import { NAV, activeHref, holdsAny, splitMenu } from "@/lib/auth/routes";
+import { NAV, activeHref, holdsAny, offered, splitMenu } from "@/lib/auth/routes";
 import { BrandMark, Icon, type IconName } from "@/components/Icon";
 import { TourMenuItem, TourRunner } from "@/components/Tour";
 import { ProblemButton } from "@/components/ProblemButton";
@@ -53,6 +54,51 @@ export interface ShellMember {
   approvals?: number;
   /** Practising (0096): a banner on every screen, so practice is never taken for real. */
   practice?: boolean;
+  /** How paying stands (0109): said on every screen while it is not paid. */
+  subscription?: { state: "active" | "grace" | "read_only" | "closed"; graceLeft: number | null };
+  /** A system administrator looking as this business's read-only support (0109). */
+  support?: boolean;
+}
+
+/** Paying and support (0109), said on every screen while they matter. */
+function StandingBanner({ member }: { member: ShellMember }) {
+  const { t } = useT();
+  const state = member.subscription?.state ?? "active";
+  if (member.support)
+    return (
+      <div className="practice-banner" role="status" data-testid="support-banner">
+        <strong>{t("SUPPORT")}</strong>
+        <span>
+          {t("You are looking at {business} as its support: nothing can be changed.", {
+            business: member.businessName,
+          })}
+        </span>
+        <form action={leaveSupportAction}>
+          <button type="submit" data-testid="support-leave">
+            {t("Leave")}
+          </button>
+        </form>
+      </div>
+    );
+  if (state === "active") return null;
+  return (
+    <div className="practice-banner" role="status" data-testid="payment-banner">
+      <span>
+        {state === "grace"
+          ? t("The payment is due: {n} days left before the system only shows what is kept.", {
+              n: member.subscription?.graceLeft ?? 0,
+            })
+          : state === "read_only"
+            ? t("The payment is overdue: the system only shows what is kept until it is paid.")
+            : t("This business is closed. Its owner can still download its data.")}
+      </span>
+      {state !== "grace" && (
+        <a href="/settings/export" className="practice-banner-go" data-testid="payment-export">
+          {t("Download all of the business's data")}
+        </a>
+      )}
+    </div>
+  );
 }
 
 /** Practice, said on every screen, with the way back. */
@@ -282,7 +328,7 @@ export function AppShell({
 
   // Only the screens this person's roles open. The database enforces the
   // same limits on every read and write; this just keeps the menu honest.
-  const nav = NAV.filter((n) => holdsAny(member.permissions, n.anyOf));
+  const nav = NAV.filter((n) => offered(member.permissions, n));
   // The till takes the whole screen, and so does the clock (0068); the menu
   // opens from the ☰ button.
   const posMode =
@@ -365,6 +411,7 @@ export function AppShell({
         </Link>
       </header>
       {member.practice && <PracticeBanner />}
+      {!member.practice && <StandingBanner member={member} />}
       {!member.practice && <DeviceNote />}
       <OfflineBanner />
       <div className="layout">

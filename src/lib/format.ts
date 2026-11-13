@@ -68,6 +68,7 @@ const MOVEMENT_LABEL: Record<string, string> = {
   transfer_out: "Transfer out",
   refund_return_to_stock: "Refund return",
   reversal: "Reversal",
+  packing: "Packing",
   receipt_correction: "Delivery corrected",
   cost_adjustment: "Revalued",
 };

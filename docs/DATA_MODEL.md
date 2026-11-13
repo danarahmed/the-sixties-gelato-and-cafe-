@@ -2054,6 +2054,106 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### Running many businesses (`0109`)
+
+- **`business.pilot`**: in the pilot group; a part whose catalogue entry says
+  `"stage": "pilot"` is on only for it until released. **`business.paid_until`**
+  (none: no end) and **`business.closed_at`**: `subscription_state(business)` is
+  `active`, `grace` (up to 7 days after `paid_until`), `read_only` (only the
+  permissions that read are held, `permission_reads`) or `closed` (every
+  permission refused). Practice cafés are always active.
+- **`support_grant`**: the owner's permission for the system's support, 1 to
+  72 hours, with why, taken back with `revoked_at`. **`support_twin`**: the
+  administrator's read-only member ("System support", the auditor's role) in
+  each business visited; **`support_visit`**: each visit. While a grant lasts,
+  a request with the header `x-sixties-support: <business>` from a system
+  administrator acts as that member (`session_member_id`); without one, as
+  themselves. `grant_support_access(hours, reason)`, `revoke_support_access()`
+  and `support_access()` (the owner); `support_enter(business)` (the
+  administrators), on the business's audit trail as `support.grant`,
+  `support.revoke` and `support.enter`.
+- **`problem_report.for_support`**: sent to the system's support too (the
+  reporter's tick, from `context.for_support`). `admin_problem_reports()`.
+- `admin_businesses()` adds each business's pilot, paid until, state, last
+  sale, sales today, errors in the last day, tills keeping sales, problems sent
+  to support and support's access. `set_business_paid_until`,
+  `set_business_pilot`, `set_business_closed` (the administrators, with why).
+- `my_profile()` gives `subscription` (`state`, `paid_until`, `grace_left`) and
+  `support`; while read-only or closed it lists only the permissions that
+  read. `export_business_data()` (the owner, never support): the business's
+  places, accounts, menu, prices, stock items, suppliers, customers, people,
+  sales, stock movements and books, at any time.
+
+### Plans, parts and the type of business (`0108`)
+
+- **`business.business_type`** (`cafe`, `bakery`, `restaurant`, `supplier`;
+  café by default) decides which parts are on by default; **`business.plan`**
+  (`starter`, `complete`, `business`; Business by default) which parts it may
+  have at all, and how many places (Starter and Complete: one branch and one
+  store, no central kitchen; checked as a place is added).
+- `part_catalogue()`: each part, its label, the plans that include it and the
+  types it is on for: `till`, `recipes`, `purchasing`, `staff`, `accounting`,
+  `wholesale`, `branches`. `permission_part(permission)`: the part a
+  permission's work belongs to (null: the core, always on).
+- **`business_part`**: the owner's own switch for a part, within the plan,
+  with why. Every business here before 0108 has each part kept on (no one set
+  them; a change of type lets them follow the new type's defaults).
+  `part_on(business, part)`.
+- `current_has_permission` holds no permission whose part is off, so the
+  database refuses that work where it already refuses a role; `require_permission`
+  says "That part is off for this business". `my_profile()` lists only the
+  permissions of parts that are on, names each part that is off as `off:<part>`
+  for the screens, and gives `plan` and `business_type`. The books run
+  underneath whatever the plan.
+- `business_parts()` (any member); `set_business_part(part, on, reason)` and
+  `set_business_type(type, reason)` (the owner); `admin_businesses()` and
+  `set_business_plan(business, plan, reason)` (the system's administrators).
+  On the audit trail as `business.part`, `business.type` and `business.plan`.
+
+### Packing at the till (`0107`)
+
+- **`packing_item`**: a stock item that is packing (`role`: bag, cup, lid, box
+  or other), with how many of it an order takes by default to take away
+  (`takeaway_qty`) and for delivery (`delivery_qty`), 0 to 20; `is_active`.
+  `save_packing_item(item, role, takeaway, delivery, active)` (settings.manage),
+  on the audit trail as `packing.item`; it makes **5500 Packaging** the first
+  time.
+- **`variant_packing`**: what one of a size goes out in, to take away or for
+  delivery (a cup and its lid), 1 to 10 of each. `set_variant_packing(variant,
+items)` (recipe.edit), on the audit trail as `packing.variant`. Never on
+  dine-in. `packing_setup()` gives both to the till (no costs).
+- **`sales_order_packing`**: what each order went out in: the item, how many,
+  its average cost then and the value; `sent_by_till` when the cashier's count
+  was sent (else the defaults, `default_packing`). One movement each, of the
+  new type `packing`, referencing `sales_order_packing`/the order; one journal
+  per order, 5500 debited and 1200 credited. The sale's own cost is
+  unchanged; a void or refund does not bring it back.
+- `record_sale(…, p_packing)` and `settle_tab(…, p_packing)` take the till's
+  count (`[{item_id, qty}]`); `post_sale` packs each new order
+  (`pack_order`). `report_packing(from, to, location)` (cost.view): the total,
+  by item, by day, by way of selling, by cashier, and the 20 orders that took
+  the most.
+
+### Sale days (`0106`)
+
+- **`sale_day`**: a named percentage off (above 0, at most 90), from one day
+  to another (two months at most), with the hours of each day if given
+  (`from_time`, `to_time`, both or neither, on the same day), and the
+  categories it leaves out (`excluded_categories`). `stopped_at`/`stopped_by`
+  when it was stopped early. Two are never on at once; one that has begun is
+  not changed. Read only through its functions.
+- `save_sale_day(id, name, percent, starts_on, ends_on, from_time, to_time,
+excluded)` and `stop_sale_day(id)` (settings.manage), on the audit trail as
+  `sale_day.save` and `sale_day.stop`. `sale_days()` (settings or profit);
+  `sale_day_now()` (sale.create), for the till.
+- The till gives it as the bill's discount with the reason `sale_day`
+  (kept as "Sale day: name"). While one is on, `member_rule_number`'s
+  `discount_cap_percent` is at least its percentage, so it needs nobody's
+  approval.
+- `report_sale_day(id)` (profit.view): bills, full price, discounts (the sale
+  day's apart), sales, cost and profit while it was on, against the same days
+  and hours of the weeks just before it.
+
 ### A target margin for each product or category (`0105`)
 
 - **`product.target_margin_percent`**, **`product_category.target_margin_percent`**

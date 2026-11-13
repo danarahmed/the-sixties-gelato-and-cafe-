@@ -23,6 +23,14 @@ export interface SaleExtras {
   tip: number;
   noService: boolean;
   service: number;
+  /** What the order went out in (0107), as the cashier left it; null when the café keeps no packing. */
+  packing?: { itemId: string; qty: number }[] | null;
+}
+
+/** The pay screen's packing row (0107): each packing item, and how many the order takes by default. */
+export interface PackingRow {
+  items: { itemId: string; name: string }[];
+  start: Record<string, number>;
 }
 
 /** Notes a customer is likely to hand over for this total: the next round sums above it. */
@@ -95,6 +103,7 @@ export function PayDialog({
   service = null,
   tips = false,
   decimals = 0,
+  packing = null,
   onConfirm,
   onClose,
 }: {
@@ -142,6 +151,8 @@ export function PayDialog({
   tips?: boolean;
   /** The currency's decimals, rounding the service charge as the database does. */
   decimals?: number;
+  /** The packing row (0107): each packing item and how many the order takes by default; none before it. */
+  packing?: PackingRow | null;
   onConfirm: (
     payments: Payment[],
     orderNo: string | null,
@@ -173,7 +184,20 @@ export function PayDialog({
   const tipBad = tipTyped !== "" && !/^\d+$/.test(tipTyped);
   const tip = tips && !tipBad && tipTyped !== "" ? Number(tipTyped) : 0;
   const total = base + serviceAmount + tip;
-  const extras: SaleExtras = { tip, noService: waived && service !== null, service: serviceAmount };
+  // What the order goes out in (0107): the defaults, changed with + and −.
+  const [packed, setPacked] = useState<Record<string, number>>(() => ({
+    ...(packing?.start ?? {}),
+  }));
+  const bump = (itemId: string, by: number) =>
+    setPacked((p) => ({ ...p, [itemId]: Math.max(0, Math.min(100, (p[itemId] ?? 0) + by)) }));
+  const extras: SaleExtras = {
+    tip,
+    noService: waived && service !== null,
+    service: serviceAmount,
+    packing: packing
+      ? packing.items.map((i) => ({ itemId: i.itemId, qty: packed[i.itemId] ?? 0 }))
+      : null,
+  };
   const [tender, setTender] = useState<Choice>(
     initialTender === "other" && initialMethod ? `m:${initialMethod}` : initialTender,
   );
@@ -334,6 +358,47 @@ export function PayDialog({
             </span>
           )}
         </div>
+
+        {packing && packing.items.length > 0 && (
+          <div className="pay-extras" data-testid="pay-packing">
+            <div className="pay-extra-row" style={{ flexWrap: "wrap" }}>
+              <span>{t("Packing")}</span>
+              {packing.items.map((i) => (
+                <span
+                  key={i.itemId}
+                  className="pack-count"
+                  data-testid="pack-item"
+                  data-item={i.name}
+                >
+                  <span>{i.name}</span>
+                  <button
+                    type="button"
+                    className="chip"
+                    aria-label={t("One fewer {name}", { name: i.name })}
+                    onClick={() => bump(i.itemId, -1)}
+                    disabled={busy || (packed[i.itemId] ?? 0) <= 0}
+                    data-testid="pack-less"
+                  >
+                    −
+                  </button>
+                  <span className="mono" data-testid="pack-n">
+                    {packed[i.itemId] ?? 0}
+                  </span>
+                  <button
+                    type="button"
+                    className="chip"
+                    aria-label={t("One more {name}", { name: i.name })}
+                    onClick={() => bump(i.itemId, 1)}
+                    disabled={busy}
+                    data-testid="pack-more"
+                  >
+                    +
+                  </button>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         {(service || tips) && (
           <div className="pay-extras" data-testid="pay-extras">

@@ -37,6 +37,15 @@ import { getClockSpots } from "@/lib/db/security";
 import { isSystemAdmin } from "@/lib/db/speed";
 import { getTaxReport, getTaxSetup } from "@/lib/db/tax";
 import { TaxSettings } from "@/components/settings/TaxSettings";
+import { getSaleDayCategories, getSaleDays } from "@/lib/db/saleDays";
+import { SaleDays } from "@/components/settings/SaleDays";
+import { getPackingChoices, getPackingSetup } from "@/lib/db/packing";
+import { PackingSettings } from "@/components/settings/PackingSettings";
+import { getBusinessParts } from "@/lib/db/parts";
+import { PlanAndParts } from "@/components/settings/PlanAndParts";
+import { PLAN_LABEL } from "@/lib/plans";
+import { getSupportAccess } from "@/lib/db/support";
+import { SupportAccess } from "@/components/settings/SupportAccess";
 import {
   notSetUp,
   peopleStatus,
@@ -109,6 +118,16 @@ export default async function SettingsPage() {
   const taxSetup = await getTaxSetup();
   const taxToday = businessToday(profile.timezone);
   const taxReport = taxSetup ? await getTaxReport(`${taxToday.slice(0, 8)}01`, taxToday) : null;
+  // Sale days (0106); null before it.
+  const [saleDays, saleDayCategories] = await Promise.all([getSaleDays(), getSaleDayCategories()]);
+  const saleDayOn = saleDays?.find((s) => s.status === "on" || s.status === "between") ?? null;
+  // Plans and parts (0108); null before it.
+  const businessParts = await getBusinessParts();
+  // Support access and the business's data (0109), for the owner; null before it.
+  const supportAccess = profile.roles.includes("owner") ? await getSupportAccess() : null;
+  // Packing (0107); null before it.
+  const packingSetup = await getPackingSetup();
+  const packingChoices = packingSetup ? await getPackingChoices() : null;
   // The café's own ways of selling, in use: a delivery platform sets what its customers pay.
   const shopChannels = channels
     .filter((c) => c.active && !isPlatformChannel(c.code))
@@ -193,6 +212,8 @@ export default async function SettingsPage() {
       {systemAdmin && (
         <p className="muted" style={{ margin: 0 }} data-testid="system-admin">
           {t("For the system's administrators:")} <Link href="/admin/speed">{t("Speed")}</Link>
+          {" · "}
+          <Link href="/admin/businesses">{t("Businesses and plans")}</Link>
         </p>
       )}
 
@@ -450,6 +471,86 @@ export default async function SettingsPage() {
               setup={taxSetup}
               report={taxReport}
               isOwner={profile.roles.includes("owner")}
+            />
+          </section>
+        </SettingsGroup>
+      )}
+
+      {saleDays && (
+        <SettingsGroup
+          id="sale-days"
+          title={t("Sale days")}
+          status={[
+            saleDayOn
+              ? `${t("On now")} · ${saleDayOn.name} · ${saleDayOn.percent}%`
+              : t("None on now"),
+          ]}
+        >
+          <section className="sg-part" data-testid="settings-sale-days">
+            <h3 style={{ marginTop: 0 }}>{t("Sale days")}</h3>
+            <SaleDays saleDays={saleDays} categories={saleDayCategories} today={today} />
+          </section>
+        </SettingsGroup>
+      )}
+
+      {businessParts && (
+        <SettingsGroup
+          id="plan"
+          title={t("Plan and parts")}
+          status={[
+            t("The {plan} plan", { plan: t(PLAN_LABEL[businessParts.plan]) }),
+            t("{n} parts on", { n: businessParts.parts.filter((p) => p.on).length }),
+          ]}
+        >
+          <section className="sg-part" data-testid="settings-plan">
+            <h3 style={{ marginTop: 0 }}>{t("Plan and parts")}</h3>
+            <PlanAndParts
+              plan={businessParts.plan}
+              businessType={businessParts.businessType}
+              parts={businessParts.parts}
+              isOwner={profile.roles.includes("owner")}
+            />
+          </section>
+        </SettingsGroup>
+      )}
+
+      {supportAccess && (
+        <SettingsGroup
+          id="support"
+          title={t("Support and your data")}
+          status={[
+            supportAccess.openUntil ? t("Support may look now") : t("Support has no access"),
+          ]}
+        >
+          <section className="sg-part" data-testid="settings-support">
+            <h3 style={{ marginTop: 0 }}>{t("Support and your data")}</h3>
+            <SupportAccess
+              openUntil={supportAccess.openUntil}
+              grants={supportAccess.grants}
+              visits={supportAccess.visits}
+              timezone={profile.timezone}
+            />
+          </section>
+        </SettingsGroup>
+      )}
+
+      {packingSetup && packingChoices && (
+        <SettingsGroup
+          id="packing"
+          title={t("Packing")}
+          status={[
+            packingSetup.items.some((i) => i.active)
+              ? t("{n} packing items", { n: packingSetup.items.filter((i) => i.active).length })
+              : t("None set up"),
+          ]}
+        >
+          <section className="sg-part" data-testid="settings-packing">
+            <h3 style={{ marginTop: 0 }}>{t("Packing")}</h3>
+            <PackingSettings
+              items={packingSetup.items}
+              variants={packingSetup.variants}
+              stock={packingChoices.items}
+              sizes={packingChoices.sizes}
             />
           </section>
         </SettingsGroup>

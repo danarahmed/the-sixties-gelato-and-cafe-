@@ -177,7 +177,35 @@ export const saleExtras = {
     .min(0, "A tip is a whole amount of 0 or more")
     .nullish(),
   noService: z.boolean().nullish(),
+  /** What the order went out in (0107), as the cashier left it; none: the database's defaults. */
+  packing: z
+    .array(
+      z.object({
+        itemId: id("a packing item"),
+        qty: z
+          .number()
+          .int("An order goes out in 0 to 100 of a packing item")
+          .min(0, "An order goes out in 0 to 100 of a packing item")
+          .max(100, "An order goes out in 0 to 100 of a packing item"),
+      }),
+    )
+    .max(30)
+    .nullish(),
 };
+
+/**
+ * The packing as the database takes it (0107): sent only when the till counted
+ * it (a till with packing set up), and only to the sale functions that take it.
+ */
+export function packingToDb(v: { packing?: { itemId: string; qty: number }[] | null }) {
+  return v.packing
+    ? {
+        p_packing: v.packing
+          .filter((x) => x.qty > 0)
+          .map((x) => ({ item_id: x.itemId, qty: x.qty })),
+      }
+    : {};
+}
 
 /** The extras as the database takes them: none sent when none are used. */
 export function extrasToDb(v: { tip?: number | null; noService?: boolean | null }) {

@@ -100,6 +100,10 @@ Plan a short window when the café is closed.
 | A supplier bill in dollars and dinars (`0103`)     | ⏳ Waiting for the owner to apply it in the SQL editor, after `0102`                                                                                                                                                                                                                                                                                                                                                                             |
 | Comparing cashiers (`0104`)                        | ⏳ Waiting for the owner to apply it in the SQL editor, after `0103`                                                                                                                                                                                                                                                                                                                                                                             |
 | A target margin for each product (`0105`)          | ⏳ Waiting for the owner to apply it in the SQL editor, after `0104`                                                                                                                                                                                                                                                                                                                                                                             |
+| Sale days (`0106`)                                 | ⏳ Waiting for the owner to apply it in the SQL editor, after `0105`                                                                                                                                                                                                                                                                                                                                                                             |
+| Packing at the till (`0107`)                       | ⏳ Waiting for the owner to apply it in the SQL editor, after `0106`                                                                                                                                                                                                                                                                                                                                                                             |
+| Plans and parts (`0108`)                           | ⏳ Waiting for the owner to apply it in the SQL editor, after `0107`                                                                                                                                                                                                                                                                                                                                                                             |
+| Running many businesses (`0109`)                   | ⏳ Waiting for the owner to apply it in the SQL editor, after `0108`                                                                                                                                                                                                                                                                                                                                                                             |
 
 ## 0. Before you start
 
@@ -4468,6 +4472,64 @@ the café's, as before. Nothing recorded changes. Rehearsed with
 `tests/sql/target_margin.test.sql`. Applied after `0104`, as each one before
 it: open `supabase/migrations/0105_target_margin.sql` on GitHub, **Raw**, copy
 all of it, paste it into Supabase's **SQL Editor** → **New query**, **Run**.
+
+## After `0106`
+
+Migration `0106` brings **sale days**: Settings → Sale days, "N% off, from
+this day to that day", hours optional, on everything or with some categories
+left out. Each till shows it at the top and gives it as the bill's discount by
+itself (add-ons, meal deals and marked-down products at their own price); a
+discount a cashier gives is never added to it: the bigger one wins. It ends by
+itself, or is stopped. Reports → Sale days shows each one's result against the
+weeks before. Rehearsed with `tests/sql/sale_days.test.sql`. Applied after
+`0105`, as each one before it: open `supabase/migrations/0106_sale_days.sql`
+on GitHub, **Raw**, copy all of it, paste it into Supabase's **SQL Editor** →
+**New query**, **Run**.
+
+## After `0107`
+
+Migration `0107` brings **packing at the till**: Settings → Packing, which
+stock items are packing (a bag, a cup, a lid, a box), how many of each an
+order takes by default to take away and for delivery (a bag: 1), and what
+each size goes out in (a large cup and its lid). The pay screen shows them
+with + and −; dine-in takes none. What each order went out in leaves stock at
+its average cost, to its own account, **5500 Packaging**, made the first time
+packing is set up; the products' cost is unchanged. Reports → Packing shows it
+by day, by way of selling, by cashier and by order. Rehearsed with
+`tests/sql/packing.test.sql`. Applied after `0106`, as each one before it:
+open `supabase/migrations/0107_packing.sql` on GitHub, **Raw**, copy all of
+it, paste it into Supabase's **SQL Editor** → **New query**, **Run**.
+
+## After `0108`
+
+Migration `0108` brings **plans, parts and the type of business**: each
+business is a café, bakery, restaurant or supplier, on the Starter, Complete or
+Business plan. The Sixty's is a café on the Business plan with every part on,
+so nothing changes for it. Settings → Plan and parts shows each part; the
+owner may turn one off (and on again) with why. A part that is off is hidden
+from the menu and its work is refused by the database; the books still run
+underneath. The system's administrators change a business's plan on
+Settings → Businesses and plans. Rehearsed with
+`tests/sql/plans_and_parts.test.sql`. Applied after `0107`, as each one before
+it: open `supabase/migrations/0108_plans_and_parts.sql` on GitHub, **Raw**,
+copy all of it, paste it into Supabase's **SQL Editor** → **New query**,
+**Run**.
+
+## After `0109`
+
+Migration `0109` brings **running many businesses**: the administrators'
+page (Settings → Businesses and plans) shows each business's last sale,
+today's sales, errors, tills keeping sales, problems sent to support, its plan,
+paying and the pilot group. "Something's wrong?" can send a problem to the
+system's support too. The owner allows support to look for 1 to 72 hours
+(Settings → Support and your data), read-only, each visit recorded, and may
+take it back. A business paid until a day has 7 days' grace, then the system
+only shows what is kept, then an administrator may close it; its owner can
+download all its data at any time. The Sixty's is paid with no end: nothing
+changes for it. Rehearsed with `tests/sql/running_many.test.sql`. Applied
+after `0108`, as each one before it: open
+`supabase/migrations/0109_running_many.sql` on GitHub, **Raw**, copy all of
+it, paste it into Supabase's **SQL Editor** → **New query**, **Run**.
 
 ## Clearing the test records
 

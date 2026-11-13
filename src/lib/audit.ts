@@ -200,6 +200,24 @@ const ACTION_LABEL: Record<string, string> = {
   // End-of-day markdowns (0079).
   "price.markdown": "Marked down",
   "price.markdown_stop": "Markdown stopped",
+  // Sale days (0106).
+  "sale_day.save": "Sale day saved",
+  "sale_day.stop": "Sale day stopped",
+  // Plans and parts (0108).
+  "business.plan": "Plan changed",
+  "business.part": "A part turned on or off",
+  "business.type": "Type of business changed",
+  // Running many businesses (0109).
+  "business.paid_until": "Paid until changed",
+  "business.pilot": "Pilot group changed",
+  "business.close": "Business closed",
+  "business.reopen": "Business opened again",
+  "support.grant": "Support allowed",
+  "support.revoke": "Support taken back",
+  "support.enter": "Support looked",
+  // Packing (0107).
+  "packing.item": "Packing item set",
+  "packing.variant": "A size's packing set",
   // Equipment (0081).
   "asset.add": "Equipment added",
   "asset.depreciate": "Depreciation posted",
@@ -338,6 +356,12 @@ export function actionLabel(action: string): string {
 }
 
 const FIELD_LABEL: Record<string, string> = {
+  // The business's plan, type and paying (0108, 0109).
+  business_type: "Type of business",
+  plan: "Plan",
+  pilot: "Pilot group",
+  paid_until: "Paid until",
+  closed_at: "Closed",
   name: "Name",
   name_ar: "Arabic name",
   name_ckb: "Kurdish name",

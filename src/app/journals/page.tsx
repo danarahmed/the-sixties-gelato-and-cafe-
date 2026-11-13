@@ -2,7 +2,7 @@ import Link from "next/link";
 import { PrintButton } from "@/components/PrintButton";
 import { PrintHead } from "@/components/PrintHead";
 import { getMsg, getT } from "@/lib/i18n/server";
-import { has, requirePermission } from "@/lib/auth/session";
+import { has, requirePart, requirePermission } from "@/lib/auth/session";
 import {
   findJournalIds,
   getGlAccounts,
@@ -66,6 +66,7 @@ export default async function JournalsPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const profile = await requirePermission("cost.view");
+  requirePart(profile, "accounting");
   const t = await getT();
   const msg = await getMsg();
   const sp = await searchParams;

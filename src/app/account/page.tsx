@@ -11,7 +11,7 @@ import { PhoneWarnings } from "@/components/push/PhoneWarnings";
 import { backupCodesLeft, twoStepState } from "@/lib/auth/twoStep";
 import { TwoStepCard } from "./TwoStepCard";
 import { FirstScreenForm } from "./FirstScreenForm";
-import { NAV, holdsAny, roleHome } from "@/lib/auth/routes";
+import { NAV, holdsAny, offered, roleHome } from "@/lib/auth/routes";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +35,7 @@ export default async function AccountPage({
   const codesLeft = twoStep?.on ? await backupCodesLeft().catch(() => null) : null;
 
   // The screens they may start on (E6): those the menu offers them.
-  const mine = s.profile ? NAV.filter((n) => holdsAny(s.profile!.permissions, n.anyOf)) : [];
+  const mine = s.profile ? NAV.filter((n) => offered(s.profile!.permissions, n)) : [];
   const roleScreen = s.profile ? roleHome(s.profile.permissions) : "/account";
   const roleScreenKey = NAV.find((n) => n.href === roleScreen)?.key ?? "nav.account";
 
