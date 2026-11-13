@@ -869,6 +869,47 @@ export function biggerDiscount(
     : o;
 }
 
+/** The café's packing (0107), as the till reads it: no costs. */
+export interface PackingSetup {
+  items: {
+    itemId: string;
+    name: string;
+    nameAr: string | null;
+    nameCkb: string | null;
+    role: "bag" | "cup" | "lid" | "box" | "other";
+    takeaway: number;
+    delivery: number;
+    active: boolean;
+  }[];
+  /** What one of each size goes out in, to take away or for delivery. */
+  variants: { variantId: string; itemId: string; qty: number }[];
+}
+
+/**
+ * What an order goes out in by default, as the database works it out
+ * (default_packing, 0107): nothing on dine-in; otherwise each line's sizes'
+ * cups and lids, and the order's own bag. By packing item; none left out at 0.
+ */
+export function defaultPacking(o: Order, setup: PackingSetup | null): Record<string, number> {
+  const out: Record<string, number> = {};
+  if (!setup || o.channel === "dine_in") return out;
+  const active = new Set(setup.items.filter((i) => i.active).map((i) => i.itemId));
+  for (const l of o.lines)
+    for (const v of setup.variants)
+      if (v.variantId === l.variantId && active.has(v.itemId))
+        out[v.itemId] = (out[v.itemId] ?? 0) + v.qty * l.qty;
+  for (const i of setup.items) {
+    if (!i.active) continue;
+    const n = o.channel === "takeaway" ? i.takeaway : i.delivery;
+    if (n > 0) out[i.itemId] = (out[i.itemId] ?? 0) + n;
+  }
+  for (const k of Object.keys(out)) {
+    out[k] = Math.round(out[k]! * 1000) / 1000;
+    if (out[k]! <= 0) delete out[k];
+  }
+  return out;
+}
+
 export function itemCount(o: Order, byId?: Map<string, PosItem>): number {
   // A weighing counts as one item, whatever it weighs (0075).
   return o.lines.reduce((n, l) => n + (byId?.get(l.variantId)?.soldByWeight ? 1 : l.qty), 0);

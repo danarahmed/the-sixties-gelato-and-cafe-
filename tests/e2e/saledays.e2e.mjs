@@ -44,12 +44,16 @@ console.log("▸ the till gives it by itself");
   await page.getByRole("button", { name: /Cash/ }).click();
   await page.locator(".pay-confirm").click();
   await page.getByText("Sale recorded").waitFor({ timeout: 10000 });
+  // An earlier suite may have changed the espresso's price: 20% of whatever it is now.
+  const sold = last(
+    `select gross_amount::int || '|' || discount_amount::int || '|' || coalesce(discount_reason, '')
+       from sales_order order by placed_at desc limit 1`,
+  ).split("|");
+  const gross = Number(sold[0]);
+  const off = Number(sold[1]);
   check(
-    last(
-      `select gross_amount::int || ' ' || discount_amount::int || ' ' || coalesce(discount_reason, '')
-         from sales_order order by placed_at desc limit 1`,
-    ) === "5000 1000 Sale day: E2E autumn sale",
-    "5,000 at full price, 1,000 off for the sale day, with no manager",
+    sold[2] === "Sale day: E2E autumn sale" && off > 0 && off <= gross * 0.2 && off >= gross * 0.2 - 500,
+    `the full price and the sale day's 20% off apart, with no manager (${sold.join(" ")})`,
   );
   await ctx.close();
 }

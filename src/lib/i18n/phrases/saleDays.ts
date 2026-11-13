@@ -44,6 +44,7 @@ const phrases: PhraseBook = {
   },
   "a sale day": { ar: "يوم تخفيضات", ckb: "ڕۆژێکی داشکاندن" },
   Nothing: { ar: "لا شيء", ckb: "هیچ" },
+  "The sale day's name": { ar: "اسم يوم التخفيضات", ckb: "ناوی ڕۆژی داشکاندنەکە" },
   "Choose a sale day": { ar: "اختر يوم تخفيضات", ckb: "ڕۆژێکی داشکاندن هەڵبژێرە" },
   "Sale days": { ar: "أيام التخفيضات", ckb: "ڕۆژەکانی داشکاندن" },
   "None on now": { ar: "لا شيء الآن", ckb: "ئێستا هیچ نییە" },

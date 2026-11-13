@@ -203,6 +203,9 @@ const ACTION_LABEL: Record<string, string> = {
   // Sale days (0106).
   "sale_day.save": "Sale day saved",
   "sale_day.stop": "Sale day stopped",
+  // Packing (0107).
+  "packing.item": "Packing item set",
+  "packing.variant": "A size's packing set",
   // Equipment (0081).
   "asset.add": "Equipment added",
   "asset.depreciate": "Depreciation posted",

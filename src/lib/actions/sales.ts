@@ -25,6 +25,7 @@ import {
   payments,
   rewardsTaken,
   extrasToDb,
+  packingToDb,
   saleExtras,
 } from "@/lib/validation";
 import { howPaid, saleReceipt, type PaidPart } from "@/lib/payments";
@@ -146,6 +147,7 @@ export async function recordSaleAction(
     p_address: v.data.addressId ?? null,
     p_rewards: v.data.rewards,
     ...extrasToDb(v.data),
+    ...packingToDb(v.data),
   });
   if (!r.ok) return r;
   refresh(...SALE_PATHS, "/platforms");

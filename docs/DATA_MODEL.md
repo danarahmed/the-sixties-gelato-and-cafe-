@@ -2054,6 +2054,30 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### Packing at the till (`0107`)
+
+- **`packing_item`**: a stock item that is packing (`role`: bag, cup, lid, box
+  or other), with how many of it an order takes by default to take away
+  (`takeaway_qty`) and for delivery (`delivery_qty`), 0 to 20; `is_active`.
+  `save_packing_item(item, role, takeaway, delivery, active)` (settings.manage),
+  on the audit trail as `packing.item`; it makes **5500 Packaging** the first
+  time.
+- **`variant_packing`**: what one of a size goes out in, to take away or for
+  delivery (a cup and its lid), 1 to 10 of each. `set_variant_packing(variant,
+items)` (recipe.edit), on the audit trail as `packing.variant`. Never on
+  dine-in. `packing_setup()` gives both to the till (no costs).
+- **`sales_order_packing`**: what each order went out in: the item, how many,
+  its average cost then and the value; `sent_by_till` when the cashier's count
+  was sent (else the defaults, `default_packing`). One movement each, of the
+  new type `packing`, referencing `sales_order_packing`/the order; one journal
+  per order, 5500 debited and 1200 credited. The sale's own cost is
+  unchanged; a void or refund does not bring it back.
+- `record_sale(…, p_packing)` and `settle_tab(…, p_packing)` take the till's
+  count (`[{item_id, qty}]`); `post_sale` packs each new order
+  (`pack_order`). `report_packing(from, to, location)` (cost.view): the total,
+  by item, by day, by way of selling, by cashier, and the 20 orders that took
+  the most.
+
 ### Sale days (`0106`)
 
 - **`sale_day`**: a named percentage off (above 0, at most 90), from one day

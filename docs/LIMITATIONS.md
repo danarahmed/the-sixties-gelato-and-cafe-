@@ -810,3 +810,12 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   from an earlier day is recorded today, saying when it was paid. Paid by the
   bank, a card or the owner, an expense keeps the date it is given.
 - Full payment-card details are never stored.
+- A sale day (`0106`) is the bill's one discount: a cashier's own discount is
+  never added to it (the bigger one wins when the money is taken), a loyalty
+  reward is not taken on a sale day, and add-ons, meal deals and products
+  already marked down stay at their own price. A sale kept on the till while
+  the internet was down is judged against the cap when it arrives: one that
+  arrives after the sale day has ended needs the cashier's own cap.
+- Packing (`0107`) is free to the customer and never comes back: a void or a
+  refund leaves it spent. A sale sent once the internet is back, or by an
+  older till, takes the café's defaults rather than the cashier's count.

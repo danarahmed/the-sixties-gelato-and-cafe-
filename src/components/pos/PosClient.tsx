@@ -76,6 +76,8 @@ import {
   keepSaleDay,
   saleDayDiscount,
   type TillSaleDay,
+  defaultPacking,
+  type PackingSetup,
   newBill,
   orderDue,
   orderFromBill,
@@ -179,6 +181,8 @@ interface Pending {
   tip?: number | null;
   noService?: boolean;
   service?: number;
+  /** What the order went out in (0107), sent again with the retry; null for the defaults. */
+  packing?: { itemId: string; qty: number }[] | null;
 }
 
 /** What a waiting payment comes to: the products, the service charge and the tip (0090). */
@@ -234,6 +238,7 @@ function loadPending(): Pending | null {
       tip: p.tip ?? null,
       noService: p.noService ?? false,
       service: p.service ?? 0,
+      packing: Array.isArray(p.packing) ? p.packing : null,
     };
   } catch {
     return null;
@@ -417,6 +422,7 @@ export function PosClient({
   receiptSetup = null,
   offlineKey = null,
   saleDay: initialSaleDay = null,
+  packing = null,
 }: {
   items: PosItem[];
   /** The meal deals on now (0089), and when the menu next changes by itself. */
@@ -474,6 +480,8 @@ export function PosClient({
   offlineKey?: string | null;
   /** The sale day on now (0106): its discount is given by itself; null when none. */
   saleDay?: TillSaleDay | null;
+  /** The café's packing (0107): the pay screen's + / − row; null before it, or with none set up. */
+  packing?: PackingSetup | null;
 }) {
   const { t, msg: say, locale } = useT();
   const router = useRouter();
@@ -556,6 +564,18 @@ export function PosClient({
   const [autoPrint, setAutoPrint] = useState(false);
   const [ticketOn, setTicketOn] = useState(true);
   const [now, setNow] = useState(() => Date.now());
+  // The packing items the pay screen counts (0107), by their names in this language.
+  const packingItems = useMemo(
+    () =>
+      (packing?.items ?? [])
+        .filter((i) => i.active)
+        .map((i) => ({
+          itemId: i.itemId,
+          name:
+            (locale === "ar" ? i.nameAr : locale === "ckb" ? i.nameCkb : null)?.trim() || i.name,
+        })),
+    [packing, locale],
+  );
   // The sale day while it is on (0106): it ends by itself, and the till with it.
   const saleDayOn =
     saleDay && (!saleDay.endsAt || Date.parse(saleDay.endsAt) > now) ? saleDay : null;
@@ -1708,6 +1728,7 @@ export function PosClient({
       tip: extras.tip > 0 ? extras.tip : null,
       noService: extras.noService,
       service: extras.service,
+      packing: extras.packing ?? null,
       job: {
         kind: "receipt",
         title: dialog.title,
@@ -1768,6 +1789,7 @@ export function PosClient({
               rewards: p.rewards ?? null,
               tip: p.tip ?? null,
               noService: p.noService ?? false,
+              packing: p.packing ?? null,
             })
           : await payBillAction({
               tabId: p.tabId!,
@@ -1779,6 +1801,7 @@ export function PosClient({
               rewards: p.rewards ?? null,
               tip: p.tip ?? null,
               noService: p.noService ?? false,
+              packing: p.packing ?? null,
             });
       if (!r.ok && r.uncertain) {
         // No answer from the database: it may have been recorded. A quick sale
@@ -2663,6 +2686,11 @@ export function PosClient({
           }
           tips={service !== null && !isPlatform(dialog.order.channel)}
           decimals={money.decimals}
+          packing={
+            !dialog.offline && packingItems.length > 0
+              ? { items: packingItems, start: defaultPacking(dialog.order, packing) }
+              : null
+          }
           onConfirm={confirmPay}
           onClose={() => setDialog(null)}
         />

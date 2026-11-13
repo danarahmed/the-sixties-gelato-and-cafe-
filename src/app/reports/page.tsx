@@ -287,6 +287,14 @@ export default async function ReportsPage({
       href: "/reports/sale-days",
       label: t("Sale days: what each one sold and earned, against the weeks before →"),
     });
+  // Packing (0107), for whoever sees costs.
+  if (has(profile, "cost.view"))
+    reportPages.push({
+      path: "/reports/packing",
+      testId: "to-packing",
+      href: "/reports/packing",
+      label: t("Packing: what the orders went out in, and what it cost →"),
+    });
   // Where people get stuck (0097), for the owner.
   if (profile.roles.includes("owner"))
     reportPages.push({

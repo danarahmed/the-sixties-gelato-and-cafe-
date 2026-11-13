@@ -99,6 +99,10 @@ select t from (values ('watch_state'), ('two_step_backup_code'), ('two_step_back
 insert into reset_keep
 select t from (values ('member_device'), ('system_admin'), ('speed_sample'), ('business_offline_key'), ('tax_setup')) v(t)
  where to_regclass('public.' || t) is not null;
+-- Which stock items are packing, and what each size goes out in (0107), are the menu's: kept.
+insert into reset_keep
+select t from (values ('packing_item'), ('variant_packing')) v(t)
+ where to_regclass('public.' || t) is not null;
 
 do $$
 declare v_mode text := coalesce(current_setting('sixties.reset', true), '');
@@ -176,6 +180,8 @@ begin
        || case when to_regclass('public.till_kept') is not null then ', till_kept' else '' end
        -- The sale days set up while testing (0106), with the sales they counted.
        || case when to_regclass('public.sale_day') is not null then ', sale_day' else '' end
+       -- What each order went out in (0107), with the sales.
+       || case when to_regclass('public.sales_order_packing') is not null then ', sales_order_packing' else '' end
        || ' restart identity';
 end $$;
 

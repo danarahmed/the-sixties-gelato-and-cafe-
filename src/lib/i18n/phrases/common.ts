@@ -155,6 +155,7 @@ const phrases: PhraseBook = {
   "Transfer out": { ar: "تحويل صادر", ckb: "گواستنەوەی دەرچوو" },
   "Refund return": { ar: "إرجاع مع الاسترداد", ckb: "گەڕانەوە لەگەڵ پارەدانەوە" },
   Reversal: { ar: "عكس", ckb: "هەڵگەڕاندنەوە" },
+  Packing: { ar: "التغليف", ckb: "پێچانەوە" },
 
   // What a form says when an entry is wrong (src/lib/validation.ts): {1} is
   // the field's own name ("The amount"), itself a phrase of its screen's book.

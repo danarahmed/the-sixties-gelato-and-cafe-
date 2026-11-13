@@ -182,7 +182,7 @@ export function SaleDays({
         className="grid"
         style={{ gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 8 }}
       >
-        <Field label={t("Name")}>
+        <Field label={t("The sale day's name")}>
           <input
             style={inputStyle}
             value={name}

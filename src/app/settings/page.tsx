@@ -39,6 +39,8 @@ import { getTaxReport, getTaxSetup } from "@/lib/db/tax";
 import { TaxSettings } from "@/components/settings/TaxSettings";
 import { getSaleDayCategories, getSaleDays } from "@/lib/db/saleDays";
 import { SaleDays } from "@/components/settings/SaleDays";
+import { getPackingChoices, getPackingSetup } from "@/lib/db/packing";
+import { PackingSettings } from "@/components/settings/PackingSettings";
 import {
   notSetUp,
   peopleStatus,
@@ -114,6 +116,9 @@ export default async function SettingsPage() {
   // Sale days (0106); null before it.
   const [saleDays, saleDayCategories] = await Promise.all([getSaleDays(), getSaleDayCategories()]);
   const saleDayOn = saleDays?.find((s) => s.status === "on" || s.status === "between") ?? null;
+  // Packing (0107); null before it.
+  const packingSetup = await getPackingSetup();
+  const packingChoices = packingSetup ? await getPackingChoices() : null;
   // The café's own ways of selling, in use: a delivery platform sets what its customers pay.
   const shopChannels = channels
     .filter((c) => c.active && !isPlatformChannel(c.code))
@@ -473,6 +478,28 @@ export default async function SettingsPage() {
           <section className="sg-part" data-testid="settings-sale-days">
             <h3 style={{ marginTop: 0 }}>{t("Sale days")}</h3>
             <SaleDays saleDays={saleDays} categories={saleDayCategories} today={today} />
+          </section>
+        </SettingsGroup>
+      )}
+
+      {packingSetup && packingChoices && (
+        <SettingsGroup
+          id="packing"
+          title={t("Packing")}
+          status={[
+            packingSetup.items.some((i) => i.active)
+              ? t("{n} packing items", { n: packingSetup.items.filter((i) => i.active).length })
+              : t("None set up"),
+          ]}
+        >
+          <section className="sg-part" data-testid="settings-packing">
+            <h3 style={{ marginTop: 0 }}>{t("Packing")}</h3>
+            <PackingSettings
+              items={packingSetup.items}
+              variants={packingSetup.variants}
+              stock={packingChoices.items}
+              sizes={packingChoices.sizes}
+            />
           </section>
         </SettingsGroup>
       )}

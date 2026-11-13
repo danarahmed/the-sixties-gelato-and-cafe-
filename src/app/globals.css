@@ -7859,6 +7859,12 @@ details.page-intro > p {
   border-radius: 10px;
   background: var(--surface-2);
 }
+/* The packing row (0107): each packing item with − and +. */
+.pack-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
 .pay-extra-row {
   display: flex;
   gap: 8px;

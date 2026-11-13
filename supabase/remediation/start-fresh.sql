@@ -158,6 +158,9 @@ begin
        || case when to_regclass('public.fx_revaluation') is not null then ', fx_revaluation' else '' end
        -- The sale days (0106).
        || case when to_regclass('public.sale_day') is not null then ', sale_day' else '' end
+       -- The packing (0107): which items, what each size goes out in, and each order's.
+       || case when to_regclass('public.sales_order_packing') is not null
+               then ', packing_item, variant_packing, sales_order_packing' else '' end
        || ' restart identity';
 end $$;
 

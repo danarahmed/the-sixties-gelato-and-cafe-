@@ -36,7 +36,8 @@ begin
     perform test.eq(n, 0::bigint, t || ' is empty');
   end loop;
 end $$;
-select test.eq((select count(*) from reason_code)::int, 20, 'the upgrade brings only the list of reasons (0028)');
+select test.eq((select count(*) from reason_code)::int, 21,
+  'the upgrade brings only the list of reasons (0028, and 0106''s sale day)');
 select test.eq((select string_agg(code, ',' order by code) from delivery_platform), 'careem,talabat,toters',
   'and the delivery platforms sales are matched to (0030)');
 select test.eq((select count(*) from cash_drawer where business_id = :biz)::int, 2, 'and a drawer at each location (0036)');

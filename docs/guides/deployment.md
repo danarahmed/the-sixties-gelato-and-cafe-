@@ -101,6 +101,7 @@ Plan a short window when the café is closed.
 | Comparing cashiers (`0104`)                        | ⏳ Waiting for the owner to apply it in the SQL editor, after `0103`                                                                                                                                                                                                                                                                                                                                                                             |
 | A target margin for each product (`0105`)          | ⏳ Waiting for the owner to apply it in the SQL editor, after `0104`                                                                                                                                                                                                                                                                                                                                                                             |
 | Sale days (`0106`)                                 | ⏳ Waiting for the owner to apply it in the SQL editor, after `0105`                                                                                                                                                                                                                                                                                                                                                                             |
+| Packing at the till (`0107`)                       | ⏳ Waiting for the owner to apply it in the SQL editor, after `0106`                                                                                                                                                                                                                                                                                                                                                                             |
 
 ## 0. Before you start
 
@@ -4482,6 +4483,20 @@ weeks before. Rehearsed with `tests/sql/sale_days.test.sql`. Applied after
 `0105`, as each one before it: open `supabase/migrations/0106_sale_days.sql`
 on GitHub, **Raw**, copy all of it, paste it into Supabase's **SQL Editor** →
 **New query**, **Run**.
+
+## After `0107`
+
+Migration `0107` brings **packing at the till**: Settings → Packing, which
+stock items are packing (a bag, a cup, a lid, a box), how many of each an
+order takes by default to take away and for delivery (a bag: 1), and what
+each size goes out in (a large cup and its lid). The pay screen shows them
+with + and −; dine-in takes none. What each order went out in leaves stock at
+its average cost, to its own account, **5500 Packaging**, made the first time
+packing is set up; the products' cost is unchanged. Reports → Packing shows it
+by day, by way of selling, by cashier and by order. Rehearsed with
+`tests/sql/packing.test.sql`. Applied after `0106`, as each one before it:
+open `supabase/migrations/0107_packing.sql` on GitHub, **Raw**, copy all of
+it, paste it into Supabase's **SQL Editor** → **New query**, **Run**.
 
 ## Clearing the test records
 
