@@ -365,6 +365,12 @@ export function actionLabel(action: string): string {
 }
 
 const FIELD_LABEL: Record<string, string> = {
+  // The business's plan, type and paying (0108, 0109).
+  business_type: "Type of business",
+  plan: "Plan",
+  pilot: "Pilot group",
+  paid_until: "Paid until",
+  closed_at: "Closed",
   name: "Name",
   name_ar: "Arabic name",
   name_ckb: "Kurdish name",
