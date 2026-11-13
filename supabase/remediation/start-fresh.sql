@@ -81,6 +81,9 @@ insert into fresh_keep
 select t from (values ('member_device'), ('system_admin'), ('speed_sample'), ('business_offline_key'),
                       ('tax_setup')) v(t)
  where to_regclass('public.' || t) is not null;
+-- The business's own switches for its parts (0108) are settings: kept.
+insert into fresh_keep
+select t from (values ('business_part')) v(t) where to_regclass('public.' || t) is not null;
 
 do $$
 begin

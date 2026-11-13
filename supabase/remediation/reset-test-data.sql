@@ -103,6 +103,9 @@ select t from (values ('member_device'), ('system_admin'), ('speed_sample'), ('b
 insert into reset_keep
 select t from (values ('packing_item'), ('variant_packing')) v(t)
  where to_regclass('public.' || t) is not null;
+-- The business's own switches for its parts (0108) are settings: kept.
+insert into reset_keep
+select t from (values ('business_part')) v(t) where to_regclass('public.' || t) is not null;
 
 do $$
 declare v_mode text := coalesce(current_setting('sixties.reset', true), '');

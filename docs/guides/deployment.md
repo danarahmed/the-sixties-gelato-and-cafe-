@@ -102,6 +102,7 @@ Plan a short window when the café is closed.
 | A target margin for each product (`0105`)          | ⏳ Waiting for the owner to apply it in the SQL editor, after `0104`                                                                                                                                                                                                                                                                                                                                                                             |
 | Sale days (`0106`)                                 | ⏳ Waiting for the owner to apply it in the SQL editor, after `0105`                                                                                                                                                                                                                                                                                                                                                                             |
 | Packing at the till (`0107`)                       | ⏳ Waiting for the owner to apply it in the SQL editor, after `0106`                                                                                                                                                                                                                                                                                                                                                                             |
+| Plans and parts (`0108`)                           | ⏳ Waiting for the owner to apply it in the SQL editor, after `0107`                                                                                                                                                                                                                                                                                                                                                                             |
 
 ## 0. Before you start
 
@@ -4497,6 +4498,21 @@ by day, by way of selling, by cashier and by order. Rehearsed with
 `tests/sql/packing.test.sql`. Applied after `0106`, as each one before it:
 open `supabase/migrations/0107_packing.sql` on GitHub, **Raw**, copy all of
 it, paste it into Supabase's **SQL Editor** → **New query**, **Run**.
+
+## After `0108`
+
+Migration `0108` brings **plans, parts and the type of business**: each
+business is a café, bakery, restaurant or supplier, on the Starter, Complete or
+Business plan. The Sixty's is a café on the Business plan with every part on,
+so nothing changes for it. Settings → Plan and parts shows each part; the
+owner may turn one off (and on again) with why. A part that is off is hidden
+from the menu and its work is refused by the database; the books still run
+underneath. The system's administrators change a business's plan on
+Settings → Businesses and plans. Rehearsed with
+`tests/sql/plans_and_parts.test.sql`. Applied after `0107`, as each one before
+it: open `supabase/migrations/0108_plans_and_parts.sql` on GitHub, **Raw**,
+copy all of it, paste it into Supabase's **SQL Editor** → **New query**,
+**Run**.
 
 ## Clearing the test records
 

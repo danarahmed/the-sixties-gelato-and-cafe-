@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useT } from "@/lib/i18n/I18nProvider";
 import type { Locale } from "@/lib/i18n/core";
-import { NAV, activeHref, holdsAny, splitMenu } from "@/lib/auth/routes";
+import { NAV, activeHref, holdsAny, offered, splitMenu } from "@/lib/auth/routes";
 import { BrandMark, Icon, type IconName } from "@/components/Icon";
 import { TourMenuItem, TourRunner } from "@/components/Tour";
 import { ProblemButton } from "@/components/ProblemButton";
@@ -282,7 +282,7 @@ export function AppShell({
 
   // Only the screens this person's roles open. The database enforces the
   // same limits on every read and write; this just keeps the menu honest.
-  const nav = NAV.filter((n) => holdsAny(member.permissions, n.anyOf));
+  const nav = NAV.filter((n) => offered(member.permissions, n));
   // The till takes the whole screen, and so does the clock (0068); the menu
   // opens from the ☰ button.
   const posMode =

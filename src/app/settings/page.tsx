@@ -41,6 +41,8 @@ import { getSaleDayCategories, getSaleDays } from "@/lib/db/saleDays";
 import { SaleDays } from "@/components/settings/SaleDays";
 import { getPackingChoices, getPackingSetup } from "@/lib/db/packing";
 import { PackingSettings } from "@/components/settings/PackingSettings";
+import { getBusinessParts } from "@/lib/db/parts";
+import { PlanAndParts, PLAN_LABEL } from "@/components/settings/PlanAndParts";
 import {
   notSetUp,
   peopleStatus,
@@ -116,6 +118,8 @@ export default async function SettingsPage() {
   // Sale days (0106); null before it.
   const [saleDays, saleDayCategories] = await Promise.all([getSaleDays(), getSaleDayCategories()]);
   const saleDayOn = saleDays?.find((s) => s.status === "on" || s.status === "between") ?? null;
+  // Plans and parts (0108); null before it.
+  const businessParts = await getBusinessParts();
   // Packing (0107); null before it.
   const packingSetup = await getPackingSetup();
   const packingChoices = packingSetup ? await getPackingChoices() : null;
@@ -203,6 +207,8 @@ export default async function SettingsPage() {
       {systemAdmin && (
         <p className="muted" style={{ margin: 0 }} data-testid="system-admin">
           {t("For the system's administrators:")} <Link href="/admin/speed">{t("Speed")}</Link>
+          {" · "}
+          <Link href="/admin/businesses">{t("Businesses and plans")}</Link>
         </p>
       )}
 
@@ -478,6 +484,27 @@ export default async function SettingsPage() {
           <section className="sg-part" data-testid="settings-sale-days">
             <h3 style={{ marginTop: 0 }}>{t("Sale days")}</h3>
             <SaleDays saleDays={saleDays} categories={saleDayCategories} today={today} />
+          </section>
+        </SettingsGroup>
+      )}
+
+      {businessParts && (
+        <SettingsGroup
+          id="plan"
+          title={t("Plan and parts")}
+          status={[
+            t("The {plan} plan", { plan: t(PLAN_LABEL[businessParts.plan]) }),
+            t("{n} parts on", { n: businessParts.parts.filter((p) => p.on).length }),
+          ]}
+        >
+          <section className="sg-part" data-testid="settings-plan">
+            <h3 style={{ marginTop: 0 }}>{t("Plan and parts")}</h3>
+            <PlanAndParts
+              plan={businessParts.plan}
+              businessType={businessParts.businessType}
+              parts={businessParts.parts}
+              isOwner={profile.roles.includes("owner")}
+            />
           </section>
         </SettingsGroup>
       )}

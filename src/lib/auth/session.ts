@@ -6,7 +6,7 @@ import { PRACTICE_COOKIE } from "@/lib/practice";
 import type { Permission } from "@domain/auth/permissions.js";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { supabaseConfig } from "@/lib/supabase/config";
-import { roleHome } from "./routes";
+import { partOn, roleHome } from "./routes";
 
 /** Who is signed in, as the database knows them (my_profile()). */
 export interface Profile {
@@ -126,6 +126,14 @@ export async function requirePermission(...anyOf: Permission[]): Promise<Profile
   // Their role's own screen, never the chosen one: that could be this very screen.
   if (!anyOf.some((p) => profile.permissions.includes(p))) redirect(roleHome(profile.permissions));
   return profile;
+}
+
+/**
+ * A part of the system that is off for this business (0108) is not opened:
+ * its screen sends them to their starting screen, as a missing permission does.
+ */
+export function requirePart(profile: Profile, part: string): void {
+  if (!partOn(profile.permissions, part)) redirect(roleHome(profile.permissions));
 }
 
 export function has(profile: Profile, permission: Permission): boolean {

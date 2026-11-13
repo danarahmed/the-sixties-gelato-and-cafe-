@@ -135,9 +135,9 @@ select test.eq((
     from pg_proc p join pg_namespace n on n.oid = p.pronamespace
    where n.nspname = 'public' and has_function_privilege('authenticated', p.oid, 'execute')),
   'acknowledge_alert,add_attendance,add_delivery_platform,add_fixed_asset,add_item_unit,add_place,add_variant,'
-  'adjust_payroll_line,adjust_points,adjust_stock,alert_thresholds,allocate_credit,app_words,'
+  'adjust_payroll_line,adjust_points,adjust_stock,admin_businesses,alert_thresholds,allocate_credit,app_words,'
   'approvals_waiting,approvals_waiting_count,approve_payroll,approve_po,approve_stock_count,'
-  'attach_document,attendance_list,bank_book,batch_reconciliation,branch_position,business_details,buying_list,'
+  'attach_document,attendance_list,bank_book,batch_reconciliation,branch_position,business_details,business_parts,buying_list,'
   'cancel_advance,cancel_attendance,cancel_bill,cancel_card_settlement,cancel_money_move,'
   'cancel_platform_settlement,cancel_po,cancel_pre_order,cancel_prepaid_expense,cancel_production,'
   'cancel_salary_payment,cancel_scheduled_price,cancel_scheduled_recipe,cancel_stock_count,'
@@ -181,7 +181,7 @@ select test.eq((
   'save_language,save_modifier,save_modifier_group,save_packing_item,save_payment_method,save_phrases,save_po,'
   'save_push_device,save_sale_day,save_schedule,save_section,save_speed_sample,save_tab,save_table,send_po,send_stock_transfer,'
   'send_test_warning,service_charges,set_account_in_use,set_alert_thresholds,set_batch_use_by,'
-  'set_business_rule,set_category_section,set_clock_pin,set_customer_account,set_employee_left,'
+  'set_business_part,set_business_plan,set_business_rule,set_business_type,set_category_section,set_clock_pin,set_customer_account,set_employee_left,'
   'set_employee_pay,set_fx_rate,set_item_keeps,set_item_supplier,set_item_use_by,set_lot_use_by,set_member_active,set_member_place,'
   'set_member_roles,set_modifier_price,set_modifier_recipe,set_my_pin,set_no_stock,set_place_active,set_place_clock_spot,set_place_sections,'
   'set_price,set_product_details,set_product_image,set_product_modifiers,set_receipt_logo,'

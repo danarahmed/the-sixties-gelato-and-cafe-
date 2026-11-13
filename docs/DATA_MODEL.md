@@ -2054,6 +2054,32 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### Plans, parts and the type of business (`0108`)
+
+- **`business.business_type`** (`cafe`, `bakery`, `restaurant`, `supplier`;
+  café by default) decides which parts are on by default; **`business.plan`**
+  (`starter`, `complete`, `business`; Business by default) which parts it may
+  have at all, and how many places (Starter and Complete: one branch and one
+  store, no central kitchen; checked as a place is added).
+- `part_catalogue()`: each part, its label, the plans that include it and the
+  types it is on for: `till`, `recipes`, `purchasing`, `staff`, `accounting`,
+  `wholesale`, `branches`. `permission_part(permission)`: the part a
+  permission's work belongs to (null: the core, always on).
+- **`business_part`**: the owner's own switch for a part, within the plan,
+  with why. Every business here before 0108 has each part kept on (no one set
+  them; a change of type lets them follow the new type's defaults).
+  `part_on(business, part)`.
+- `current_has_permission` holds no permission whose part is off, so the
+  database refuses that work where it already refuses a role; `require_permission`
+  says "That part is off for this business". `my_profile()` lists only the
+  permissions of parts that are on, names each part that is off as `off:<part>`
+  for the screens, and gives `plan` and `business_type`. The books run
+  underneath whatever the plan.
+- `business_parts()` (any member); `set_business_part(part, on, reason)` and
+  `set_business_type(type, reason)` (the owner); `admin_businesses()` and
+  `set_business_plan(business, plan, reason)` (the system's administrators).
+  On the audit trail as `business.part`, `business.type` and `business.plan`.
+
 ### Packing at the till (`0107`)
 
 - **`packing_item`**: a stock item that is packing (`role`: bag, cup, lid, box

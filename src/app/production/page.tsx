@@ -3,7 +3,7 @@ import { TourOffer } from "@/components/Tour";
 import Decimal from "decimal.js";
 import { getLocale, getMsg, getT } from "@/lib/i18n/server";
 import { Rich } from "@/lib/i18n/Rich";
-import { has, requirePermission } from "@/lib/auth/session";
+import { has, requirePart, requirePermission } from "@/lib/auth/session";
 import { getItems, getStockBoard } from "@/lib/db/read";
 import { getItemCosts } from "@/lib/db/reports";
 import {
@@ -42,6 +42,7 @@ export default async function ProductionPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const profile = await requirePermission("cost.view", "production.record");
+  requirePart(profile, "recipes");
   const t = await getT();
   const msg = await getMsg();
   const locale = await getLocale();

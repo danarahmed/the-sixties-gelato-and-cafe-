@@ -4,7 +4,7 @@ import { PrintHead } from "@/components/PrintHead";
 import { getDir, getMsg, getT } from "@/lib/i18n/server";
 import { arrows } from "@/lib/i18n/core";
 import { Rich } from "@/lib/i18n/Rich";
-import { has, requirePermission } from "@/lib/auth/session";
+import { has, requirePart, requirePermission } from "@/lib/auth/session";
 import {
   getCloseChecklist,
   getGlAccounts,
@@ -39,6 +39,7 @@ export default async function AccountingPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const profile = await requirePermission("cost.view");
+  requirePart(profile, "accounting");
   const t = await getT();
   const msg = await getMsg();
   const { on } = arrows(await getDir());

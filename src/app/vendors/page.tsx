@@ -1,5 +1,5 @@
 import { getT } from "@/lib/i18n/server";
-import { has, requirePermission } from "@/lib/auth/session";
+import { has, requirePart, requirePermission } from "@/lib/auth/session";
 import { getDollarsOwed } from "@/lib/db/dollars";
 import { DollarsOwed } from "@/components/books/DollarsOwed";
 import {
@@ -82,6 +82,7 @@ export default async function VendorsPage({
 }) {
   const { vendor: askedVendor } = await searchParams;
   const profile = await requirePermission("cost.view");
+  requirePart(profile, "purchasing");
   const t = await getT();
   const today = businessToday(profile.timezone);
   const canBill = has(profile, "purchase.create") || has(profile, "accounting.post");
