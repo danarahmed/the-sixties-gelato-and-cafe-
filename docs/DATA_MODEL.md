@@ -2054,6 +2054,27 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### Social insurance and the payslip (`0112`)
+
+- **`social_insurance_setup`** (one per business): on or off, the café's
+  part (default 12%) and the person's (default 5%) of the salary, each 0 to
+  50%. `set_social_insurance(enabled, employer, employee)` (the owner only;
+  turning it on adds 6120 Social insurance and 2110 Social insurance owed),
+  `social_insurance()` (payroll.view).
+- `employee.social_insurance` (default on): off for someone on a trial
+  period, with `set_employee_social_insurance` (payroll.run).
+- `payroll_line.si_employee` and `si_employer`: set when the payroll is
+  approved, on the salary (the pay less the tips); the line's `net` is then
+  `gross − advance_recovered − si_employee`. The approval's journal adds
+  Dr 6120 (the café's part) and Cr 2110 (both parts) (`post_journal` reads
+  `sixties.payroll_si`); reopening the payroll puts the nets back.
+- **`social_insurance_payment`**: what was paid to the government for a
+  month, from the bank (1020) or the safe (1005), never more than is left:
+  Dr 2110, Cr the money. `pay_social_insurance(month, amount, from, ref, key)`
+  (payroll.run), `social_insurance_month(month)` (payroll.view).
+- `payslip(line)`: one person's month line by line, for payroll.view or the
+  person themselves.
+
 ### The supplier parts (`0111`)
 
 - Two parts, on by default for a bakery and a supplier: `price_lists` (Price

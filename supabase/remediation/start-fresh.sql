@@ -174,6 +174,9 @@ begin
        -- The customers' prices, quotes and delivery notes (0111).
        || case when to_regclass('public.sales_quote') is not null
                then ', customer_price, delivery_note, sales_quote' else '' end
+       -- Social insurance: on or off, and what was paid to the government (0112).
+       || case when to_regclass('public.social_insurance_payment') is not null
+               then ', social_insurance_payment, social_insurance_setup' else '' end
        || ' restart identity';
 end $$;
 

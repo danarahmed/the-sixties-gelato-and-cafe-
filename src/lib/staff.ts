@@ -414,6 +414,8 @@ export interface PayrollLine {
   advanceRecovered: number;
   recoverySet: boolean;
   gross: number;
+  /** The person's part of social insurance (0112), off the pay once approved; 0 before it. */
+  siEmployee: number;
   net: number;
   paid: number;
 }
@@ -505,6 +507,9 @@ export function payrollDetailFrom(v: unknown): PayrollDetail {
       advanceRecovered: num(l.advance_recovered),
       recoverySet: l.recovery_set === true,
       gross: num(l.gross),
+      // What is to be paid is the pay less the advance taken back and, from
+      // 0112, the person's part of social insurance.
+      siEmployee: Math.max(0, num(l.gross) - num(l.advance_recovered) - num(l.net)),
       net: num(l.net),
       paid: num(l.paid),
     })),
