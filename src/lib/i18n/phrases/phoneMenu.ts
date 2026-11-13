@@ -53,6 +53,10 @@ const phrases: PhraseBook = {
     ar: "المالك وحده يشغّل القائمة على هواتف الزبائن أو يوقفها",
     ckb: "تەنها خاوەنەکە لیستی خواردن لەسەر مۆبایلی کڕیاران هەڵدەکات یان دەیکوژێنێتەوە",
   },
+  // The receipt sent by WhatsApp, at the till.
+  "WhatsApp…": { ar: "واتساب…", ckb: "واتساپ…" },
+  "Their WhatsApp number": { ar: "رقم واتسابهم", ckb: "ژمارەی واتساپەکەیان" },
+  "Send by WhatsApp": { ar: "أرسل عبر واتساب", ckb: "بە واتساپ بنێرە" },
 };
 
 export default phrases;

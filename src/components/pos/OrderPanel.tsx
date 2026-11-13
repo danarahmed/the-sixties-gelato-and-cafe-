@@ -38,6 +38,7 @@ import {
   type Tender,
 } from "./model";
 import { Emblem, type BaristaTicket, type PrintJob } from "./PrintSlip";
+import { receiptText, whatsappLink, whatsappNumber } from "@/lib/whatsapp";
 import { Icon } from "@/components/Icon";
 import { TourOffer } from "@/components/Tour";
 
@@ -790,6 +791,7 @@ export function OrderPanel({
                   <Icon name="cup" /> {t("pos.baristaTicket")}
                 </button>
               )}
+              <WhatsAppReceipt job={receipt.job} />
             </div>
             <p className="rc-next muted">{t("pos.nextCustomer")}</p>
           </div>
@@ -1045,5 +1047,52 @@ export function OrderPanel({
         <Notice msg={msg} />
       </div>
     </div>
+  );
+}
+
+/** The receipt sent by WhatsApp: the customer's number, then WhatsApp opens with it written out. */
+function WhatsAppReceipt({ job }: { job: PrintJob }) {
+  const { t } = useT();
+  const [open, setOpen] = useState(false);
+  const [phone, setPhone] = useState("");
+  const number = whatsappNumber(phone);
+  if (!open)
+    return (
+      <button type="button" onClick={() => setOpen(true)} data-testid="receipt-whatsapp">
+        {t("WhatsApp…")}
+      </button>
+    );
+  return (
+    <span style={{ display: "inline-flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+      <input
+        inputMode="tel"
+        dir="ltr"
+        autoFocus
+        aria-label={t("Their WhatsApp number")}
+        placeholder="0750 123 4567"
+        value={phone}
+        onChange={(e) => setPhone(e.target.value)}
+        style={{ width: 150 }}
+        data-testid="receipt-whatsapp-number"
+      />
+      <a
+        className={number ? "btn-primary" : undefined}
+        aria-disabled={!number}
+        href={
+          number
+            ? whatsappLink(
+                number,
+                receiptText(job, { total: t("pos.total"), thanks: t("print.thanks") }),
+              )
+            : undefined
+        }
+        target="_blank"
+        rel="noreferrer"
+        onClick={() => number && setOpen(false)}
+        data-testid="receipt-whatsapp-send"
+      >
+        {t("Send by WhatsApp")}
+      </a>
+    </span>
   );
 }

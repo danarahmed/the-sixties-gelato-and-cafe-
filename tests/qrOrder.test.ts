@@ -36,3 +36,19 @@ describe("the order a customer shows the waiter (0118)", () => {
     expect(decodeQrOrder(`${QR_ORDER_PREFIX}${"a".repeat(32)}-0`)).toBeNull();
   });
 });
+
+import { whatsappNumber, whatsappLink } from "@/lib/whatsapp";
+
+describe("a receipt by WhatsApp", () => {
+  it("takes an Iraqi number as typed, with its country code", () => {
+    expect(whatsappNumber("0750 123 4567")).toBe("9647501234567");
+    expect(whatsappNumber("+964 750 123 4567")).toBe("9647501234567");
+    expect(whatsappNumber("٠٧٥٠١٢٣٤٥٦٧")).toBe("9647501234567");
+    expect(whatsappNumber("12")).toBeNull();
+  });
+  it("opens WhatsApp with the receipt written out", () => {
+    expect(whatsappLink("9647501234567", "Total: 5,000 IQD")).toBe(
+      "https://wa.me/9647501234567?text=Total%3A%205%2C000%20IQD",
+    );
+  });
+});
