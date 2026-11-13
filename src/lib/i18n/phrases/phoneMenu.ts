@@ -144,6 +144,12 @@ const phrases: PhraseBook = {
     ar: "شغّل القائمة على هواتف الزبائن أولًا",
     ckb: "سەرەتا لیستی خواردن لەسەر مۆبایلی کڕیاران هەڵبکە",
   },
+  // The task videos, read aloud (plan 4, step 5).
+  "Read the words aloud": { ar: "اقرأ الكلمات بصوت عالٍ", ckb: "وشەکان بە دەنگی بەرز بخوێنەوە" },
+  "This device has no voice for this language: the captions show the words.": {
+    ar: "لا يوجد على هذا الجهاز صوت لهذه اللغة: الترجمة تعرض الكلمات.",
+    ckb: "ئەم ئامێرە دەنگی ئەم زمانەی نییە: ژێرنووسەکان وشەکان پیشان دەدەن.",
+  },
 };
 
 export default phrases;

@@ -9,6 +9,7 @@ import { dateTimeIn } from "@/lib/dates";
 import { roleLabel } from "@/lib/format";
 import { Icon } from "@/components/Icon";
 import { PracticeControls } from "./PracticeControls";
+import { TaskVideo } from "@/components/help/TaskVideo";
 import { VIDEOS, captionsSrc, videoSrc } from "@/lib/help/videos";
 import { getLocale } from "@/lib/i18n/server";
 
@@ -122,14 +123,11 @@ export default async function PracticePage() {
                   {VIDEOS[x.task] && (
                     <details className="practice-video" data-testid="practice-video">
                       <summary>{t("Watch how")}</summary>
-                      <video controls preload="none" src={videoSrc(x.task)} width={480}>
-                        <track
-                          kind="captions"
-                          srcLang={locale}
-                          src={captionsSrc(x.task, locale)}
-                          default
-                        />
-                      </video>
+                      <TaskVideo
+                        src={videoSrc(x.task)}
+                        captions={captionsSrc(x.task, locale)}
+                        locale={locale}
+                      />
                     </details>
                   )}
                 </div>
