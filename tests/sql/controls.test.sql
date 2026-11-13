@@ -152,14 +152,14 @@ select test.eq((
   'discard_journal,dispose_fixed_asset,document_counts,document_may_attach,document_may_see,'
   'document_permissions,document_record,documents_for,dollars_owed,draft_payroll,draft_purchase_orders,drawer_methods,drawer_status,'
   'employee_advances,exchange_dollars,export_business_data,find_customer,fixed_assets,force_close_session,forget_two_step_codes,fx_status,'
-  'give_away,grant_support_access,hand_over_session,inventory_valuation,invite_member,invoice_customer,is_system_admin,item_costs,'
+  'give_away,grant_support_access,hand_over_session,handle_phone_order,inventory_valuation,invite_member,invoice_customer,is_system_admin,item_costs,'
   'item_price_history,join_tabs,kitchen_setup,kitchen_tickets,labour_target,language_settings,legacy_unposted,link_phone_finish,'
   'link_phone_start,list_approvers,list_business_rules,list_members,lock_period,losses_waiting,loyalty_owed,make_delivery_note,make_item_sellable,make_two_step_codes,'
   'mark_bill_printed,mark_down,markdown_suggestions,match_platform_statement,menu_branch_prices,'
   'menu_costing,menu_recipe_lines,menu_scheduled,money_accounts,move_cash,move_money,my_profile,'
   'my_report_visits,next_bill_number,note_device,note_report_visit,note_stuck,note_supplier_credit,note_till_kept,offline_key,open_cash_session,open_tab,'
   'owner_money,packing_setup,pay_bill,pay_bill_dollars,pay_payroll,pay_salary,pay_social_insurance,payment_methods,payroll_detail,payroll_runs,payslip,'
-  'period_close_checklist,phone_status,phone_warnings,platform_money,pos_addons,pos_catalogue,'
+  'period_close_checklist,phone_order_status,phone_orders,phone_status,phone_warnings,platform_money,pos_addons,pos_catalogue,'
   'pos_deals,pos_menu_next_change,pos_open_bills,pos_use_by,post_control_correction,post_legacy_unposted,'
   'post_platform_settlement,practice_reset,practice_start,practice_tasks,practice_team,pre_orders,prepaid_expenses,preview_receipt_correction,problem_reports,'
   'product_targets,production_batches,production_lots,production_plan,production_recipes,public_menu,public_menu_setup,publish_journal,'
@@ -183,12 +183,12 @@ select test.eq((
   'send_test_warning,service_charges,set_account_in_use,set_alert_thresholds,set_batch_use_by,'
   'set_budget,set_business_closed,set_business_paid_until,set_business_part,set_business_pilot,set_business_plan,set_business_rule,set_business_type,set_category_section,set_category_station,set_clock_pin,set_customer_account,set_customer_price,set_delivery_status,set_employee_left,'
   'set_employee_pay,set_employee_social_insurance,set_fx_rate,set_item_keeps,set_item_supplier,set_item_use_by,set_lot_use_by,set_loyalty_owed,set_member_active,set_member_place,'
-  'set_member_roles,set_modifier_price,set_modifier_recipe,set_my_pin,set_no_stock,set_place_active,set_place_clock_spot,set_place_sections,'
+  'set_member_roles,set_modifier_price,set_modifier_recipe,set_my_pin,set_no_stock,set_place_active,set_place_clock_spot,set_phone_orders,set_place_sections,'
   'set_price,set_product_details,set_product_image,set_product_modifiers,set_public_menu,set_quote_status,set_receipt_logo,'
   'set_receipt_setup,set_reservation_status,set_section_hours,set_service_charge,set_social_insurance,set_target_margin,set_tax_setup,set_ticket_status,set_time_price,set_tip_sharers,set_usd_rate_band,'
   'set_variant_barcode,set_variant_packing,set_variant_weighed,set_watch_visibility,settle_problem,settle_tab,settle_tab_offline,settle_watch_finding,snooze_alert,social_insurance,social_insurance_month,'
   'speed_ping,speed_samples,split_tab,staff_list,staff_phones,staff_schedule,start_stock_count,stock_card,stock_places,'
-  'stock_transfers,stop_markdown,stop_sale_day,stop_time_price,stuck_report,submit_stock_count,supplier_records,supplier_statement,support_access,support_enter,take_pre_order,tax_setup,'
+  'stock_transfers,stop_markdown,stop_sale_day,stop_time_price,stuck_report,submit_phone_order,submit_stock_count,supplier_records,supplier_statement,support_access,support_enter,take_pre_order,tax_setup,'
   'till_lock_minutes,time_prices,tips_month,turn_off_phone_warnings,turn_on_phone_warnings,two_step_codes_left,undo_bank_statement,'
   'unlink_phone,unlock_period,unlock_till,update_business_details,update_delivery_platform,update_item,update_prepaid_expense,update_supplier,update_variant,usd_rates_used,use_by_lots,use_two_step_code,'
   'void_sale,waste_coach,watch_list,watch_may_see',
@@ -202,8 +202,8 @@ select test.eq((
 select test.eq((
   select string_agg(p.proname, ',' order by p.proname) from pg_proc p join pg_namespace n on n.oid = p.pronamespace
    where n.nspname = 'public' and has_function_privilege('anon', p.oid, 'execute')),
-  'clock_by_phone,clock_screen_code,link_phone_finish,phone_status,public_menu,push_done,push_take',
-  'the public can call no function but the clock''s four, the phone warnings'' two and the menu, each needing its key');
+  'clock_by_phone,clock_screen_code,link_phone_finish,phone_order_status,phone_status,public_menu,push_done,push_take,submit_phone_order',
+  'the public can call no function but the clock''s four, the phone warnings'' two and the menu''s three, each needing its key');
 select test.eq((
   select string_agg(distinct p.proname, ',' order by p.proname)
     from pg_trigger t join pg_proc p on p.oid = t.tgfoid join pg_class c on c.oid = t.tgrelid

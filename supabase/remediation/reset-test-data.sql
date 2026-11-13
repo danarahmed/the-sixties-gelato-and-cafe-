@@ -218,6 +218,8 @@ begin
        || case when to_regclass('public.sales_quote') is not null then ', delivery_note, sales_quote' else '' end
        -- The dollar rates each person used (0116), with the sales.
        || case when to_regclass('public.usd_rate_used') is not null then ', usd_rate_used' else '' end
+       -- The orders phones sent to the till (0119).
+       || case when to_regclass('public.phone_order') is not null then ', phone_order' else '' end
        -- What suppliers paid back of their credits (0115), with the credits.
        || case when to_regclass('public.supplier_refund') is not null then ', supplier_refund' else '' end
        -- Which late payment explained which day's short (0114), with the cash sessions.

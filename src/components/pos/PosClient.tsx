@@ -28,6 +28,7 @@ import { DrawerPanel } from "@/components/cash/DrawerPanel";
 import { ProductPicker } from "./ProductPicker";
 import { ChooseBill, FloorView } from "./FloorView";
 import { OrderPanel, type Receipt } from "./OrderPanel";
+import { PhoneOrders } from "./PhoneOrders";
 import { PayDialog, type SaleExtras } from "./PayDialog";
 import { GiveAwayDialog } from "./GiveAwayDialog";
 import { ClockDialog } from "./ClockDialog";
@@ -2575,6 +2576,16 @@ export function PosClient({
             </button>
           </div>
         )}
+        {/* Orders sent from customers' phones (0119). */}
+        <PhoneOrders
+          nameOf={(id) => {
+            const item = byId.get(id);
+            return item ? itemName(item, locale) : null;
+          }}
+          onTake={(lines) => {
+            for (const l of lines) add(l.variantId, [], l.qty);
+          }}
+        />
         <div className="bill-strip" aria-label={t("pos.openBills")}>
           <button
             className={`strip-chip${!showBill ? " active" : ""}`}

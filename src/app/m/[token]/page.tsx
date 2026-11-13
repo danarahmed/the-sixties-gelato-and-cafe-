@@ -22,5 +22,5 @@ export default async function PhoneMenuPage({ params }: { params: Promise<{ toke
         {t("This menu is not available")}
       </p>
     );
-  return <PhoneMenu menu={menu} />;
+  return <PhoneMenu menu={menu} token={token} />;
 }

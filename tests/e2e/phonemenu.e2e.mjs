@@ -73,6 +73,40 @@ console.log("▸ the waiter scans it at the till");
   await ctx.close();
 }
 
+console.log("▸ a table sends its order straight to the till (0119)");
+sql(`select test.act_as('owner@example.com'); select set_phone_orders(true, false)`);
+{
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await ctx.newPage();
+  await page.goto(`${BASE}/m/${token}`);
+  const item = page.locator('[data-testid="phone-item"][data-name="Golden espresso"]');
+  await item.getByTestId("phone-add").click();
+  await page.getByTestId("phone-show").click();
+  await page.getByTestId("phone-send").getByLabel("Your table").fill("7");
+  await page.getByTestId("phone-send-go").click();
+  await page.getByTestId("phone-sent").waitFor({ timeout: 10000 });
+  check(true, "sent from table 7");
+  await ctx.close();
+}
+{
+  const { ctx, page } = await signIn(browser, "cashier");
+  await open(page, "/pos");
+  await page.getByTestId("phone-orders").click();
+  const row = page.getByTestId("phone-order-row").first();
+  check(((await row.textContent()) ?? "").includes("Table 7"), "the till sees table 7's order");
+  await row.getByTestId("phone-order-take").click();
+  await page
+    .locator(".order-line", { hasText: "Golden espresso" })
+    .first()
+    .waitFor({ timeout: 10000 });
+  check(
+    last(`select status from phone_order order by created_at desc limit 1`) === "accepted",
+    "taken: on the order, rung up as any",
+  );
+  await ctx.close();
+}
+sql(`select test.act_as('owner@example.com'); select set_phone_orders(false, false)`);
+
 // Off again for the suites after this one.
 sql(`update public_menu set enabled = false`);
 check(last(`select enabled from public_menu`) === "f", "off: the link opens nothing");

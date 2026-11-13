@@ -59,6 +59,9 @@ export interface PublicMenuItem {
 }
 
 export interface PublicMenu {
+  /** What the phone may send (0119): a table's order to the till; an order to take away or deliver. */
+  toTill: boolean;
+  online: boolean;
   business: string;
   place: string | null;
   decimals: number;
@@ -69,6 +72,8 @@ export function publicMenuFrom(v: unknown): PublicMenu {
   const o = (v && typeof v === "object" ? v : {}) as Record<string, unknown>;
   const s = (x: unknown) => (x === null || x === undefined || x === "" ? null : String(x));
   return {
+    toTill: o.to_till === true,
+    online: o.online === true,
     business: String(o.business ?? ""),
     place: s(o.place),
     decimals: Number(o.decimals ?? 0),

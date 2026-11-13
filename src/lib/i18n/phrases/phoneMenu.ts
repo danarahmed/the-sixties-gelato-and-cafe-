@@ -68,6 +68,82 @@ const phrases: PhraseBook = {
       ar: "شاشة موجّهة إلى الزبون: افتح شاشته عليها من هذا الصندوق، فتعرض ما تسجّله والمجموع.",
       ckb: "شاشەیەک ڕووی لە کڕیارە: شاشەکەی لەسەری بکەرەوە لەم خاڵی فرۆشتنەوە، ئەوەی تۆمار دەکەیت و کۆی گشتی پیشان دەدات.",
     },
+  // Orders sent from phones (0119).
+  "Order {no} is sent": { ar: "أُرسل الطلب {no}", ckb: "داواکاری {no} نێردرا" },
+  "The café has taken it.": { ar: "استلم المقهى طلبك.", ckb: "کافێکە وەریگرت." },
+  "The café could not take it: {why}": {
+    ar: "لم يستطع المقهى أخذه: {why}",
+    ckb: "کافێکە نەیتوانی وەریبگرێت: {why}",
+  },
+  "Waiting for the café to take it…": {
+    ar: "بانتظار أن يأخذه المقهى…",
+    ckb: "چاوەڕێی ئەوەیە کافێکە وەریبگرێت…",
+  },
+  "To my table": { ar: "إلى طاولتي", ckb: "بۆ مێزەکەم" },
+  "To deliver": { ar: "توصيل", ckb: "گەیاندن" },
+  "Or send it to the counter": { ar: "أو أرسله إلى الكاونتر", ckb: "یان بینێرە بۆ کاونتەر" },
+  "Your table": { ar: "طاولتك", ckb: "مێزەکەت" },
+  "Your name": { ar: "اسمك", ckb: "ناوت" },
+  "Your phone number": { ar: "رقم هاتفك", ckb: "ژمارەی مۆبایلەکەت" },
+  "Where it goes": { ar: "إلى أين يذهب", ckb: "بۆ کوێ دەچێت" },
+  "Send my order": { ar: "أرسل طلبي", ckb: "داواکارییەکەم بنێرە" },
+  "You pay at the café, as always.": {
+    ar: "تدفع في المقهى كالعادة.",
+    ckb: "لە کافێکە پارە دەدەیت، وەک هەمیشە.",
+  },
+  "Table {name}": { ar: "الطاولة {name}", ckb: "مێزی {name}" },
+  "From phones ({n})": { ar: "من الهواتف ({n})", ckb: "لە مۆبایلەکانەوە ({n})" },
+  "Why it is turned down": { ar: "لماذا يُرفض", ckb: "بۆچی ڕەتدەکرێتەوە" },
+  "Turn it down": { ar: "ارفضه", ckb: "ڕەتی بکەرەوە" },
+  "A table may send its order straight to the till": {
+    ar: "يمكن للطاولة إرسال طلبها مباشرة إلى الصندوق",
+    ckb: "مێز دەتوانێت داواکارییەکەی ڕاستەوخۆ بنێرێت بۆ خاڵی فرۆشتن",
+  },
+  "Orders to take away or deliver, with a name and a phone number": {
+    ar: "طلبات سفري أو توصيل، باسم ورقم هاتف",
+    ckb: "داواکاری بۆ بردن یان گەیاندن، بە ناو و ژمارەی مۆبایل",
+  },
+  "Each waits at the till to be taken or turned down; it is paid at the café, as always.": {
+    ar: "كل طلب ينتظر عند الصندوق ليُؤخذ أو يُرفض؛ ويُدفع في المقهى كالعادة.",
+    ckb: "هەر یەکێک لە خاڵی فرۆشتن چاوەڕێ دەکات بۆ وەرگرتن یان ڕەتکردنەوە؛ لە کافێکە پارەی دەدرێت، وەک هەمیشە.",
+  },
+  // From the database (0119).
+  "Show your order to the waiter": {
+    ar: "أرِ طلبك للنادل",
+    ckb: "داواکارییەکەت پیشانی گارسۆن بدە",
+  },
+  "This café takes no orders from phones": {
+    ar: "هذا المقهى لا يأخذ طلبات من الهواتف",
+    ckb: "ئەم کافێیە داواکاری لە مۆبایلەوە وەرناگرێت",
+  },
+  "Say which table you are at": { ar: "قل على أي طاولة أنت", ckb: "بڵێ لەسەر کام مێزیت" },
+  "Type your name": { ar: "اكتب اسمك", ckb: "ناوت بنووسە" },
+  "Type your phone number": { ar: "اكتب رقم هاتفك", ckb: "ژمارەی مۆبایلەکەت بنووسە" },
+  "Type where it goes": { ar: "اكتب إلى أين يذهب", ckb: "بنووسە بۆ کوێ دەچێت" },
+  "Too many orders from this phone: ask at the counter": {
+    ar: "طلبات كثيرة من هذا الهاتف: اسأل عند الكاونتر",
+    ckb: "داواکاری زۆر لەم مۆبایلەوە: لە کاونتەر بپرسە",
+  },
+  "The café is busy: ask at the counter": {
+    ar: "المقهى مشغول: اسأل عند الكاونتر",
+    ckb: "کافێکە قەرەباڵغە: لە کاونتەر بپرسە",
+  },
+  "Choose up to 30 things": { ar: "اختر حتى 30 شيئًا", ckb: "تا 30 شت هەڵبژێرە" },
+  "The order cannot be read": { ar: "تعذّرت قراءة الطلب", ckb: "داواکارییەکە ناخوێندرێتەوە" },
+  "Something on the order is not on the menu now": {
+    ar: "شيء في الطلب ليس في القائمة الآن",
+    ckb: "شتێک لە داواکارییەکەدا ئێستا لە لیستەکەدا نییە",
+  },
+  "That order is not found": { ar: "ذلك الطلب غير موجود", ckb: "ئەو داواکارییە نەدۆزرایەوە" },
+  "That order was dealt with already": {
+    ar: "تمّ التعامل مع ذلك الطلب",
+    ckb: "ئەو داواکارییە پێشتر مامەڵەی لەگەڵ کرا",
+  },
+  "Say why it is turned down": { ar: "قل لماذا يُرفض", ckb: "بڵێ بۆچی ڕەتدەکرێتەوە" },
+  "Turn the menu on customers' phones on first": {
+    ar: "شغّل القائمة على هواتف الزبائن أولًا",
+    ckb: "سەرەتا لیستی خواردن لەسەر مۆبایلی کڕیاران هەڵبکە",
+  },
 };
 
 export default phrases;

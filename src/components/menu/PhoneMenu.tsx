@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { phoneOrderStatusAction, submitPhoneOrderAction } from "@/lib/actions/publicMenu";
 import { encodeQrOrder, type PublicMenu, type PublicMenuItem } from "@/lib/qrOrder";
 import { fmtIQD } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
@@ -11,7 +12,7 @@ import { QrCode } from "@/components/QrCode";
  * product with its photo and price; tapped into an order, shown as a QR for
  * the waiter to scan at the till. Nothing is sent from the phone.
  */
-export function PhoneMenu({ menu }: { menu: PublicMenu }) {
+export function PhoneMenu({ menu, token }: { menu: PublicMenu; token: string }) {
   const { t, locale } = useT();
   const [qty, setQty] = useState<Record<string, number>>({});
   const [showing, setShowing] = useState(false);
@@ -69,6 +70,16 @@ export function PhoneMenu({ menu }: { menu: PublicMenu }) {
         <button type="button" onClick={() => setShowing(false)}>
           {t("Change my order")}
         </button>
+        {(menu.toTill || menu.online) && (
+          <SendOrder
+            menu={menu}
+            token={token}
+            lines={lines.map((i) => ({
+              variantId: i.variantId,
+              qty: Math.min(20, qty[i.variantId] ?? 0),
+            }))}
+          />
+        )}
       </div>
     );
   }
@@ -162,5 +173,122 @@ export function PhoneMenu({ menu }: { menu: PublicMenu }) {
         </div>
       )}
     </div>
+  );
+}
+
+/** The order sent to the till (0119): from a table, or to take away or deliver; then where it stands. */
+function SendOrder({
+  menu,
+  token,
+  lines,
+}: {
+  menu: PublicMenu;
+  token: string;
+  lines: { variantId: string; qty: number }[];
+}) {
+  const { t, msg } = useT();
+  const kinds = [
+    ...(menu.toTill ? (["table"] as const) : []),
+    ...(menu.online ? (["pickup", "delivery"] as const) : []),
+  ];
+  const [kind, setKind] = useState<"table" | "pickup" | "delivery">(kinds[0] ?? "table");
+  const [table, setTable] = useState("");
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [sent, setSent] = useState<{ id: string; no: number } | null>(null);
+  const [status, setStatus] = useState<{ status: string; reason: string | null } | null>(null);
+  useEffect(() => {
+    if (!sent || status?.status === "accepted" || status?.status === "declined") return;
+    const tick = setInterval(async () => {
+      const r = await phoneOrderStatusAction({ token, orderId: sent.id });
+      if (r.ok) setStatus(r.data);
+    }, 8000);
+    return () => clearInterval(tick);
+  }, [sent, status, token]);
+
+  if (sent)
+    return (
+      <div className="card" data-testid="phone-sent">
+        <strong>{t("Order {no} is sent", { no: String(sent.no) })}</strong>
+        <div>
+          {status?.status === "accepted"
+            ? t("The café has taken it.")
+            : status?.status === "declined"
+              ? t("The café could not take it: {why}", { why: status.reason ?? "" })
+              : t("Waiting for the café to take it…")}
+        </div>
+      </div>
+    );
+  const LABEL = { table: t("To my table"), pickup: t("To take away"), delivery: t("To deliver") };
+  return (
+    <form
+      className="card grid"
+      style={{ gap: 8 }}
+      data-testid="phone-send"
+      onSubmit={async (e) => {
+        e.preventDefault();
+        setErr(null);
+        setBusy(true);
+        const r = await submitPhoneOrderAction({ token, kind, lines, name, phone, table, address });
+        setBusy(false);
+        if (!r.ok) setErr(r.error);
+        else setSent({ id: r.data.orderId, no: r.data.orderNo });
+      }}
+    >
+      <strong>{t("Or send it to the counter")}</strong>
+      {kinds.length > 1 && (
+        <div className="row" style={{ gap: 6, flexWrap: "wrap" }}>
+          {kinds.map((k) => (
+            <label key={k} className="chip">
+              <input type="radio" name="kind" checked={kind === k} onChange={() => setKind(k)} />{" "}
+              {LABEL[k]}
+            </label>
+          ))}
+        </div>
+      )}
+      {kind === "table" ? (
+        <input
+          aria-label={t("Your table")}
+          placeholder={t("Your table")}
+          value={table}
+          onChange={(e) => setTable(e.target.value)}
+        />
+      ) : (
+        <>
+          <input
+            aria-label={t("Your name")}
+            placeholder={t("Your name")}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+          <input
+            aria-label={t("Your phone number")}
+            placeholder="0750 123 4567"
+            inputMode="tel"
+            dir="ltr"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+          />
+          {kind === "delivery" && (
+            <input
+              aria-label={t("Where it goes")}
+              placeholder={t("Where it goes")}
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+            />
+          )}
+        </>
+      )}
+      {err && <span className="red">{msg(err)}</span>}
+      <button type="submit" className="btn-primary" disabled={busy} data-testid="phone-send-go">
+        {t("Send my order")}
+      </button>
+      <span className="muted" style={{ fontSize: ".8rem" }}>
+        {t("You pay at the café, as always.")}
+      </span>
+    </form>
   );
 }

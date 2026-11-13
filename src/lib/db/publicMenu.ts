@@ -15,6 +15,9 @@ export interface PublicMenuSetup {
   enabled: boolean;
   token: string;
   locationId: string | null;
+  /** Orders sent from phones (0119): a table's to the till; to take away or deliver. */
+  toTill: boolean;
+  online: boolean;
 }
 
 /** The link as it stands (settings.manage); null before it was ever turned on, or before 0118. */
@@ -28,5 +31,7 @@ export async function getPublicMenuSetup(): Promise<PublicMenuSetup | null | und
     enabled: o.enabled === true,
     token: String(o.token ?? ""),
     locationId: o.location_id ? String(o.location_id) : null,
+    toTill: o.to_till === true,
+    online: o.online === true,
   };
 }

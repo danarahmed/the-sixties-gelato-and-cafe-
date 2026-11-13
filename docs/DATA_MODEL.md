@@ -2054,6 +2054,19 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### Orders sent from phones to the till (`0119`)
+
+- `public_menu.to_till` and `online`, the owner's (`set_phone_orders`): a
+  table's order sent straight to the till; an order to take away or deliver
+  with a name and phone (and an address).
+- **`phone_order`**: numbered, its kind, table or name, phone and address,
+  its lines `[{variant_id, qty}]`, `new` → `accepted` or `declined` (with
+  why). `submit_phone_order(token, kind, lines, …)` and
+  `phone_order_status(token, id)` are open to the public with the link: at most
+  30 lines of at most 20, only what the menu sells now, 5 an hour from a phone,
+  200 an hour for a café. `phone_orders()` and `handle_phone_order(id,
+accept, reason)` (sale.create) at the till. Nothing is paid from a phone.
+
 ### The menu on customers' phones (`0118`)
 
 - **`public_menu`** (one per business): its link's `token` (random, 24

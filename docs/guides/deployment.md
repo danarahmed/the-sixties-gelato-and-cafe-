@@ -113,6 +113,7 @@ Plan a short window when the café is closed.
 | The dollar's rate typed with each payment (`0116`) | ⏳ Waiting for the owner to apply it in the SQL editor, after `0115`                                                                                                                                                                                                                                                                                                                                                                             |
 | Budgets (`0117`)                                   | ⏳ Waiting for the owner to apply it in the SQL editor, after `0116`                                                                                                                                                                                                                                                                                                                                                                             |
 | The menu on customers' phones (`0118`)             | ⏳ Waiting for the owner to apply it in the SQL editor, after `0117`                                                                                                                                                                                                                                                                                                                                                                             |
+| Orders sent from phones to the till (`0119`)       | ⏳ Waiting for the owner to apply it in the SQL editor, after `0118`                                                                                                                                                                                                                                                                                                                                                                             |
 
 ## 0. Before you start
 
@@ -4637,6 +4638,17 @@ tables; customers choose on their phone and show the waiter their order as a
 QR, which the till's scanner adds to the bill. Rehearsed with
 `tests/sql/qr_menu.test.sql`. Applied after `0117`, as each one before it:
 open `supabase/migrations/0118_qr_menu.sql` on GitHub, **Raw**, copy all of it,
+paste it into Supabase's **SQL Editor** → **New query**, **Run**.
+
+## After `0119`
+
+Migration `0119` brings **orders sent from phones to the till**, off until
+the owner turns each on (Settings → The menu on customers' phones): a table's
+order straight to the till, and orders to take away or deliver. Each waits at
+the till (From phones) to be added to the order or turned down; it is paid at
+the café as always. Rehearsed with `tests/sql/phone_orders.test.sql`. Applied
+after `0118`, as each one before it: open
+`supabase/migrations/0119_phone_orders.sql` on GitHub, **Raw**, copy all of it,
 paste it into Supabase's **SQL Editor** → **New query**, **Run**.
 
 ## Clearing the test records

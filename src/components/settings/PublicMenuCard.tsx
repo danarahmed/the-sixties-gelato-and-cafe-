@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { setPublicMenuAction } from "@/lib/actions/publicMenu";
+import { setPhoneOrdersAction, setPublicMenuAction } from "@/lib/actions/publicMenu";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice } from "@/components/ui";
 import { QrCode } from "@/components/QrCode";
@@ -17,7 +17,13 @@ export function PublicMenuCard({
   places,
   isOwner,
 }: {
-  setup: { enabled: boolean; token: string; locationId: string | null } | null;
+  setup: {
+    enabled: boolean;
+    token: string;
+    locationId: string | null;
+    toTill?: boolean;
+    online?: boolean;
+  } | null;
   places: { id: string; name: string }[];
   isOwner: boolean;
 }) {
@@ -46,6 +52,15 @@ export function PublicMenuCard({
         });
         router.refresh();
       }
+    });
+  }
+
+  function switches(toTill: boolean, online: boolean) {
+    setMsg(null);
+    start(async () => {
+      const r = await setPhoneOrdersAction({ toTill, online });
+      if (!r.ok) setMsg({ ok: false, text: r.error });
+      else router.refresh();
     });
   }
 
@@ -113,6 +128,35 @@ export function PublicMenuCard({
           >
             {link}
           </a>
+        </div>
+      )}
+      {setup?.enabled && (
+        <div className="grid" style={{ gap: 4 }} data-testid="phone-orders-switches">
+          <label className="chip" style={{ width: "fit-content" }}>
+            <input
+              type="checkbox"
+              checked={!!setup.toTill}
+              disabled={!isOwner || busy}
+              onChange={(e) => switches(e.target.checked, !!setup.online)}
+              data-testid="phone-to-till"
+            />{" "}
+            {t("A table may send its order straight to the till")}
+          </label>
+          <label className="chip" style={{ width: "fit-content" }}>
+            <input
+              type="checkbox"
+              checked={!!setup.online}
+              disabled={!isOwner || busy}
+              onChange={(e) => switches(!!setup.toTill, e.target.checked)}
+              data-testid="phone-online"
+            />{" "}
+            {t("Orders to take away or deliver, with a name and a phone number")}
+          </label>
+          <span className="muted" style={{ fontSize: ".8rem" }}>
+            {t(
+              "Each waits at the till to be taken or turned down; it is paid at the café, as always.",
+            )}
+          </span>
         </div>
       )}
       {!isOwner && (
