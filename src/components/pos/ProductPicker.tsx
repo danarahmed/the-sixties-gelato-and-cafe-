@@ -13,7 +13,7 @@ import { fmtIQD } from "@/lib/format";
 import { dealName, type Deal } from "@/lib/deals";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { readScan } from "@/lib/barcode";
-import { decodeQrOrder } from "@/lib/qrOrder";
+import { decodeQrOrder, QR_ORDER_PREFIX } from "@/lib/qrOrder";
 import {
   categoryName,
   fold,
@@ -430,7 +430,9 @@ export function ProductPicker({
             const chosen = shown[lit];
             if (
               e.key === "Enter" &&
-              /^[0-9A-Za-z.-]{4,32}$/.test(query.trim()) &&
+              // A barcode, or a customer's order from their phone (longer).
+              (/^[0-9A-Za-z.-]{4,32}$/.test(query.trim()) ||
+                query.trim().startsWith(QR_ORDER_PREFIX)) &&
               shown.length === 0
             ) {
               e.preventDefault();

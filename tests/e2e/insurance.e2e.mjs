@@ -61,6 +61,12 @@ const RUN = (() => {
        select draft_payroll('${MONTH}', gen_random_uuid())
         where not exists (select 1 from payroll_run where month = '${MONTH}')`);
   const id = last(`select id from payroll_run where month = '${MONTH}'`);
+  // Anyone another suite made without a pay is given one, and the draft drawn again.
+  sql(`select test.act_as('owner@example.com');
+       select set_employee_pay(l.employee_id, 'monthly', 100000, 8, null, 'For the payroll', gen_random_uuid())
+         from payroll_line l where l.run_id = '${id}' and l.pay_basis is null;
+       select draft_payroll('${MONTH}', gen_random_uuid())
+        where exists (select 1 from payroll_line l where l.run_id = '${id}' and l.pay_basis is null)`);
   sql(`select test.act_as('owner@example.com');
        select approve_payroll('${id}', gen_random_uuid())
         where (select status from payroll_run where id = '${id}') = 'draft'`);
