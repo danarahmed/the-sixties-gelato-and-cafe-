@@ -113,6 +113,9 @@ select t from (values ('kitchen_station'), ('category_station')) v(t)
 -- Each customer's own prices (0111) are the café's settings: kept.
 insert into reset_keep
 select t from (values ('customer_price')) v(t) where to_regclass('public.' || t) is not null;
+-- How far a cashier's dollar rate may be (0116) is a setting: kept.
+insert into reset_keep
+select t from (values ('usd_rate_setup')) v(t) where to_regclass('public.' || t) is not null;
 -- Whether points are booked as money owed (0113) is a setting: kept.
 insert into reset_keep
 select t from (values ('loyalty_owed_setup')) v(t) where to_regclass('public.' || t) is not null;
@@ -207,6 +210,8 @@ begin
                then ', kitchen_ticket_line, kitchen_ticket, reservation' else '' end
        -- Quotes and delivery notes (0111), with the invoices they went with.
        || case when to_regclass('public.sales_quote') is not null then ', delivery_note, sales_quote' else '' end
+       -- The dollar rates each person used (0116), with the sales.
+       || case when to_regclass('public.usd_rate_used') is not null then ', usd_rate_used' else '' end
        -- What suppliers paid back of their credits (0115), with the credits.
        || case when to_regclass('public.supplier_refund') is not null then ', supplier_refund' else '' end
        -- Which late payment explained which day's short (0114), with the cash sessions.

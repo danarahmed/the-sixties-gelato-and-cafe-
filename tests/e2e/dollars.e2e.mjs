@@ -2,8 +2,9 @@
 // manager sets today's rate on Sales → Dollars, with where it comes from. At
 // the till two espressos are paid in dollars: the dialog suggests the fewest
 // that pay, values them at the rate to the nearest 250, and gives the change
-// in dinars; the receipt shows the dollars and their value. The rate changes
-// while the till is open: the payment is refused, the till reads the new rate,
+// in dinars; the receipt shows the dollars and their value. The rate is typed
+// with each payment (0116): near the manager's it is taken, far from it a
+// manager approves it with their PIN,
 // and the payment goes through at it. Dollars worth less than the total pay
 // what they are worth, the rest by card. The drawer's close counts the dollars
 // too, blind, and they go to the safe; the owner exchanges them for dinars
@@ -196,36 +197,46 @@ check(
   "the drawer gives the change in dinars",
 );
 
-// ------------------------------------------------------------ the rate changes
-console.log("▸ the rate changes while the till is open: refused, then taken at the new rate");
+// ------------------------------------------------------------ the rate typed (0116)
+console.log(
+  "▸ the rate typed with the payment: within the band taken, far from it a manager approves it",
+);
+sql(`select test.act_as('manager@example.com'); select set_my_pin('2580');`);
 {
   const { ctx, page } = await signIn(browser, "cashier");
   await sellInDollars(page, 1);
-  sql(`select test.act_as('manager@example.com');
-       select set_fx_rate('USD', 1320, 'The exchange office, this afternoon')`);
+  await page.getByTestId("usd-rate").fill("1320");
   await page.locator("#usd-received").fill("5");
   await page.locator(".pay-confirm").click();
-  const err = page.locator(".pay-modal .badge.err");
-  await err.waitFor({ timeout: 10000 });
-  check(
-    (await err.textContent()).includes(
-      "The dollar rate is now 1320, not the 1310 shown: take the payment again",
-    ),
-    "the payment is refused: the rate changed since the till read it",
-  );
-  await page
-    .locator('label[for="usd-received"]', { hasText: "1,320 dinars a dollar" })
-    .waitFor({ timeout: 10000 });
-  check(true, "the till reads the new rate: 1,320");
-  await page.locator(".pay-confirm").click();
   await page.getByText("Sale recorded").waitFor({ timeout: 10000 });
+  check(true, "1,320, within 2% of the manager's 1,310: taken");
+  await sellInDollars(page, 1);
+  await page.getByTestId("usd-rate").fill("1500");
+  await page.getByTestId("usd-rate-far").waitFor({ timeout: 5000 });
+  check(true, "1,500 is far from it: the till says a manager approves it");
+  await page.locator("#usd-received").fill("5");
+  await page.locator(".pay-confirm").click();
+  const approve = page.getByRole("dialog", { name: "A manager approves this dollar rate" });
+  await approve.waitFor({ timeout: 10000 });
+  await approve.getByLabel("Manager", { exact: true }).selectOption({ label: "Demo Manager" });
+  await approve.getByLabel("PIN").fill("2580");
+  await approve.getByRole("button", { name: "Approve" }).click();
+  await page.getByText("Sale recorded").waitFor({ timeout: 10000 });
+  check(true, "with the manager's PIN, taken at 1,500");
   await ctx.close();
 }
 check(
   last(`select trim_scale(t.rate) || ' ' || trim_scale(t.received) from sales_tender t
           join sales_order o on o.id = t.sales_order_id order by o.created_at desc limit 1`) ===
-    `1320 ${worth(5, 1320)}`,
-  `taken at the new rate: $5 are ${iqd(worth(5, 1320))}`,
+    `1500 ${worth(5, 1500)}`,
+  `taken at the rate typed: $5 are ${iqd(worth(5, 1500))}`,
+);
+check(
+  last(`select count(*) from usd_rate_used where approved_by is not null`) === "1",
+  "the approved rate is kept with who approved it",
+);
+sql(
+  `select test.act_as('manager@example.com'); select set_fx_rate('USD', 1320, 'The exchange office, this afternoon')`,
 );
 
 // ------------------------------------------------------------ worth less than the total

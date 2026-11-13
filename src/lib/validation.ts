@@ -254,6 +254,8 @@ export const payments = z
         .positive("Dollars are taken in whole dollars")
         .nullish(),
       rate: z.number().positive("The payments cannot be read").nullish(),
+      /** A manager's approval of the rate typed (0116). */
+      approval: z.string().guid("The payments cannot be read").nullish(),
       method: z.string().guid("Choose which way to pay it was").nullish(),
       reference: z.string().trim().max(60, "A payment's reference is at most 60 letters").nullish(),
     }),

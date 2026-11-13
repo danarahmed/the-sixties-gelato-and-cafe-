@@ -144,7 +144,17 @@ export default async function PosPage() {
         discountRules={{ cap: profile.discountCap, canApprove: has(profile, "discount.approve") }}
         money={{ decimals: profile.currencyDecimals, discountStep: profile.discountRoundTo }}
         initialDrawer={drawer}
-        fx={fx.usable && fx.rate !== null ? { rate: fx.rate, roundTo: fx.roundTo } : null}
+        fx={
+          fx.usable && fx.rate !== null
+            ? {
+                rate: fx.rate,
+                roundTo: fx.roundTo,
+                typed: fx.typed,
+                bandPercent: fx.bandPercent,
+                ageHours: fx.ageHours,
+              }
+            : null
+        }
         dollarsOffHours={!fx.usable && fx.rate !== null ? fx.ageHours : null}
         startView={startView === "floor" || startView === "menu" ? startView : null}
         clockScreen={clockScreen}

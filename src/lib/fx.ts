@@ -39,6 +39,12 @@ export interface FxStatus {
   maySet: boolean;
   /** The last rates, newest first. */
   history: FxRateSet[];
+  /**
+   * The rate is typed with each payment (0116), the last one a manager used
+   * offered to start from; a cashier's within this many percent of it is taken.
+   */
+  typed: boolean;
+  bandPercent: number;
 }
 
 const numOrNull = (v: unknown): number | null =>
@@ -58,6 +64,8 @@ export function fxStatusFrom(r: Record<string, unknown> | null | undefined): FxS
     usable: d.usable === true,
     roundTo: Number(d.round_to ?? 250) || 250,
     maySet: d.may_set === true,
+    typed: d.typed === true,
+    bandPercent: Number(d.band_percent ?? 2),
     history: Array.isArray(d.history)
       ? (d.history as Record<string, unknown>[]).map((h) => ({
           rate: Number(h.rate),
@@ -193,6 +201,9 @@ export function checkDollars(
 export const RATE_REFUSED =
   /^(No dollar rate is set|The dollar rate was set \d+ hours ago|The dollar rate is now )/;
 
+/** A rate typed far from the last one a manager used, or before any (0116): a manager approves it with their PIN. */
+export const RATE_NEEDS_APPROVAL = /a manager approves (it|\d+(\.\d+)?) with their PIN$/;
+
 /** The dollars' report (report_dollars). */
 export interface DollarsReport {
   rate: { rate: number | null; setAt: string | null; setBy: string | null; reason: string | null };
@@ -317,4 +328,51 @@ export function fmtUSD(usd: number): string {
 /** "1,310": dinars a dollar, a rate, not an amount of money. */
 export function fmtRate(rate: number): string {
   return rate.toLocaleString("en-US", { maximumFractionDigits: 2 });
+}
+
+/** The rates each person typed with dollar payments (0116, usd_rates_used). */
+export interface RatesUsed {
+  bandPercent: number;
+  people: {
+    name: string;
+    times: number;
+    lowest: number;
+    highest: number;
+    average: number;
+    beyondBand: number;
+    approved: number;
+  }[];
+  rates: {
+    at: string;
+    rate: number;
+    lastRate: number | null;
+    withinBand: boolean;
+    by: string | null;
+    approvedBy: string | null;
+  }[];
+}
+
+export function ratesUsedFrom(v: unknown): RatesUsed {
+  const o = (v && typeof v === "object" ? v : {}) as Record<string, unknown>;
+  const list = (x: unknown) => (Array.isArray(x) ? (x as Record<string, unknown>[]) : []);
+  return {
+    bandPercent: Number(o.band_percent ?? 2),
+    people: list(o.people).map((p) => ({
+      name: String(p.name ?? "—"),
+      times: Number(p.times ?? 0),
+      lowest: Number(p.lowest ?? 0),
+      highest: Number(p.highest ?? 0),
+      average: Number(p.average ?? 0),
+      beyondBand: Number(p.beyond_band ?? 0),
+      approved: Number(p.approved ?? 0),
+    })),
+    rates: list(o.rates).map((r) => ({
+      at: String(r.at ?? ""),
+      rate: Number(r.rate ?? 0),
+      lastRate: numOrNull(r.last_rate),
+      withinBand: r.within_band === true,
+      by: strOrNull(r.by),
+      approvedBy: strOrNull(r.approved_by),
+    })),
+  };
 }

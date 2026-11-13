@@ -2054,6 +2054,21 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### The dollar's rate typed with each payment (`0116`)
+
+- No daily rate: `sale_dollars` takes each payment's own rate through
+  `usd_rate_take(business, rate, approval)`. A manager's (fx.rate) is taken
+  and becomes the last one (`fx_rate`, "Typed with a payment"); a cashier's
+  within the band of the last one a manager used is taken; beyond it, an
+  approval of kind `usd_rate` (a manager's PIN, scope `{rate}`) is used once.
+  `sale_payments` keeps a dollar payment's `approval`.
+- **`usd_rate_setup`**: the band, 0–20% (default 2), `set_usd_rate_band`
+  (the owner). **`usd_rate_used`**: every rate used, the last manager's rate
+  then, within the band or not, who used it and who approved it;
+  `usd_rates_used(from, to)` (fx.rate or cost.view).
+- `fx_status()` is `usable` whenever a rate was ever used (its age is shown,
+  no longer a stop), with `typed` and `band_percent`.
+
 ### The supplier's smaller gaps (`0115`)
 
 - **`supplier_refund`**: what a supplier paid back of a credit, into the till

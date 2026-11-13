@@ -107,3 +107,24 @@ export async function exchangeDollarsAction(
     },
   };
 }
+
+const bandInput = z.object({
+  percent: z
+    .number({ message: "The band is from 0% to 20%" })
+    .min(0, "The band is from 0% to 20%")
+    .max(20, "The band is from 0% to 20%"),
+});
+
+/** (the owner) How far from the last manager's rate a cashier's may be (0116). */
+export async function setUsdRateBandAction(
+  input: z.input<typeof bandInput>,
+): Promise<ActionResult<{ bandPercent: number }>> {
+  const v = parse(bandInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc<Record<string, unknown>>("set_usd_rate_band", {
+    p_percent: v.data.percent,
+  });
+  if (!r.ok) return r;
+  refresh("/sales", "/pos");
+  return { ok: true, data: { bandPercent: Number(r.data.band_percent ?? v.data.percent) } };
+}

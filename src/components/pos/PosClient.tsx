@@ -110,7 +110,7 @@ import { customerAtTillAction } from "@/lib/actions/customers";
 import { noteTillKeptAction } from "@/lib/actions/offline";
 import { reasonKey } from "@/lib/reasons";
 import { changeGiven, type Payment } from "@/lib/payments";
-import { RATE_REFUSED } from "@/lib/fx";
+import { RATE_NEEDS_APPROVAL, RATE_REFUSED } from "@/lib/fx";
 import { Icon } from "@/components/Icon";
 import {
   keptId,
@@ -360,6 +360,8 @@ type Dialog =
       what: string;
       /** It is stock past its use-by the café refuses (0098), not more than the books hold. */
       useBy?: boolean;
+      /** It is a dollar rate typed far from the last one a manager used (0116). */
+      rate?: number;
       payment: Pending;
       approvers: Approver[] | null;
       error: string | null;
@@ -453,7 +455,13 @@ export function PosClient({
   /** The drawer (0036): cash is taken only while it is open. */
   initialDrawer: DrawerState;
   /** The dollar's rate, while dollars may be taken at it (0043); read again when refused. */
-  fx?: { rate: number; roundTo: number } | null;
+  fx?: {
+    rate: number;
+    roundTo: number;
+    typed?: boolean;
+    bandPercent?: number;
+    ageHours?: number | null;
+  } | null;
   /** customer.edit: a customer, and their address, may be added at the till (0050). */
   canAddCustomer?: boolean;
   /** The rate is this many hours old, too old to take dollars at: the till says so. */
@@ -1152,11 +1160,44 @@ export function PosClient({
     );
   }
 
+  /** A dollar rate far from the last one a manager used (0116): a manager approves it, the payment waits. */
+  async function askRateApproval(payment: Pending, why: string) {
+    const rate = (payment.payments ?? []).find((x) => x.currency === "USD")?.rate ?? 0;
+    setDialog({ kind: "stock", what: say(why), rate, payment, approvers: null, error: null });
+    const r = await listApproversAction("usd_rate");
+    setDialog((cur) =>
+      cur?.kind === "stock"
+        ? { ...cur, approvers: r.ok ? r.data : [], error: r.ok ? null : r.error }
+        : cur,
+    );
+  }
+
   async function confirmStockApproval(approverId: string, pin: string) {
     if (dialog?.kind !== "stock") return;
-    const { payment, what } = dialog;
+    const { payment, what, rate } = dialog;
     setBusy("approve");
     try {
+      if (rate) {
+        const a = await requestApprovalAction({
+          kind: "usd_rate",
+          approverId,
+          pin,
+          scope: { rate },
+        });
+        if (!a.ok) {
+          setDialog((cur) => (cur?.kind === "stock" ? { ...cur, error: a.error } : cur));
+          return;
+        }
+        setDialog(null);
+        setBusy(null);
+        await sendPayment({
+          ...payment,
+          payments: (payment.payments ?? []).map((x) =>
+            x.currency === "USD" ? { ...x, approval: a.data.approvalId } : x,
+          ),
+        });
+        return;
+      }
       const r = await requestApprovalAction({
         kind: "negative_stock",
         approverId,
@@ -1886,6 +1927,14 @@ export function PosClient({
         // approve it here, and the same payment is sent again with it (0040).
         if (NEEDS_STOCK_APPROVAL.test(r.error) || NEEDS_USE_BY_APPROVAL.test(r.error)) {
           askStockApproval(p, r.error);
+          return;
+        }
+        // A dollar rate far from the last one a manager used (0116): a manager approves it.
+        if (
+          RATE_NEEDS_APPROVAL.test(r.error) &&
+          (p.payments ?? []).some((x) => x.currency === "USD")
+        ) {
+          askRateApproval(p, r.error);
           return;
         }
         if (approvalRefused(r.error)) dropApproval();
@@ -2922,9 +2971,11 @@ export function PosClient({
       {dialog?.kind === "stock" && (
         <ApproveDialog
           title={
-            dialog.useBy
-              ? t("A manager approves selling what is past its use-by")
-              : t("A manager approves selling more than the books hold")
+            dialog.rate
+              ? t("A manager approves this dollar rate")
+              : dialog.useBy
+                ? t("A manager approves selling what is past its use-by")
+                : t("A manager approves selling more than the books hold")
           }
           what={dialog.what}
           approvers={dialog.approvers}

@@ -21,6 +21,8 @@ export interface Payment {
   currency?: "USD";
   usd?: number;
   rate?: number;
+  /** A manager's approval of a rate typed far from the last one a manager used (0116). */
+  approval?: string;
   /** One of the café's ways to pay (0069): which, and the reference the app or the machine showed. */
   method?: string;
   reference?: string;

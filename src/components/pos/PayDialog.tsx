@@ -117,7 +117,13 @@ export function PayDialog({
   /** The delivery platform's name, for its sale: "Talabat". */
   platform?: string | null;
   /** The dollar's rate and the step dollars are counted to, when dollars may be taken (0043). */
-  fx?: { rate: number; roundTo: number } | null;
+  fx?: {
+    rate: number;
+    roundTo: number;
+    typed?: boolean;
+    bandPercent?: number;
+    ageHours?: number | null;
+  } | null;
   /** Dollars are not taken now: the rate is this many hours old. */
   dollarsOffHours?: number | null;
   busy: boolean;
@@ -209,6 +215,12 @@ export function PayDialog({
   const refInput = useRef<HTMLInputElement>(null);
   const [splitReceived, setSplitReceived] = useState("");
   const [usdText, setUsdText] = useState("");
+  // The rate typed for this payment (0116), the last one a manager used to start from.
+  const [rateText, setRateText] = useState(fx ? String(fx.rate) : "");
+  const typedRateNo = Number(normaliseNumber(rateText));
+  const usdRate = fx ? (fx.typed && typedRateNo >= 100 ? typedRateNo : fx.rate) : 0;
+  const farFromLast =
+    !!fx?.typed && Math.abs(usdRate - fx.rate) > (fx.rate * (fx.bandPercent ?? 2)) / 100;
   const [restWay, setRestWay] = useState<RestWay>("cash");
   const [restReceived, setRestReceived] = useState("");
   // Dollars are cash: taken where cash is, at a rate recent enough.
@@ -247,7 +259,7 @@ export function PayDialog({
   const split = tender === "split" ? checkSplit(total, rows, splitReceived) : null;
   const dollars =
     tender === "usd" && fx
-      ? checkDollars(total, fx.rate, fx.roundTo, usdText, restWay, restReceived)
+      ? checkDollars(total, usdRate, fx.roundTo, usdText, restWay, restReceived)
       : null;
   const canConfirm =
     !busy &&
@@ -767,21 +779,56 @@ export function PayDialog({
         {dollars && fx && (
           <div className="cash-box" data-testid="usd-box">
             <label className="muted" htmlFor="usd-received" style={{ fontSize: ".85rem" }}>
-              {t("Dollars handed over")} · {t("{rate} dinars a dollar", { rate: fmtRate(fx.rate) })}
+              {t("Dollars handed over")} · {t("{rate} dinars a dollar", { rate: fmtRate(usdRate) })}
             </label>
+            {fx.typed && (
+              <label style={{ display: "flex", gap: 6, alignItems: "center", fontSize: ".85rem" }}>
+                <span className="muted">{t("Dinars a dollar now")}</span>
+                <input
+                  id="usd-rate"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  className="mono"
+                  style={{ width: 90 }}
+                  value={rateText}
+                  onChange={(e) => setRateText(e.target.value)}
+                  disabled={busy}
+                  data-testid="usd-rate"
+                />
+              </label>
+            )}
+            {fx.typed && farFromLast && (
+              <span
+                className="badge warn"
+                style={{ whiteSpace: "normal" }}
+                data-testid="usd-rate-far"
+              >
+                {t(
+                  "More than {n}% from {rate}, the last rate a manager used: a manager approves it with their PIN.",
+                  { n: String(fx.bandPercent ?? 2), rate: fmtRate(fx.rate) },
+                )}
+              </span>
+            )}
+            {fx.typed && !farFromLast && (fx.ageHours ?? 0) >= 12 && (
+              <span className="muted" style={{ fontSize: ".8rem" }} data-testid="usd-rate-old">
+                {t("A manager last used this rate {n} hours ago: check it.", {
+                  n: String(fx.ageHours ?? 0),
+                })}
+              </span>
+            )}
             <input
               id="usd-received"
               ref={usdInput}
               inputMode="numeric"
               autoComplete="off"
               className="cash-input mono"
-              placeholder={fmtUSD(dollarsFor(total, fx.rate, fx.roundTo))}
+              placeholder={fmtUSD(dollarsFor(total, usdRate, fx.roundTo))}
               value={usdText}
               onChange={(e) => setUsdText(e.target.value)}
               disabled={busy}
             />
             <div className="cash-quick">
-              {suggestedDollars(total, fx.rate, fx.roundTo).map((n) => (
+              {suggestedDollars(total, usdRate, fx.roundTo).map((n) => (
                 <button
                   key={n}
                   className="mono"

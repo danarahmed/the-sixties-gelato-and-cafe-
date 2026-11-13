@@ -185,12 +185,12 @@ select test.eq((
   'set_employee_pay,set_employee_social_insurance,set_fx_rate,set_item_keeps,set_item_supplier,set_item_use_by,set_lot_use_by,set_loyalty_owed,set_member_active,set_member_place,'
   'set_member_roles,set_modifier_price,set_modifier_recipe,set_my_pin,set_no_stock,set_place_active,set_place_clock_spot,set_place_sections,'
   'set_price,set_product_details,set_product_image,set_product_modifiers,set_quote_status,set_receipt_logo,'
-  'set_receipt_setup,set_reservation_status,set_section_hours,set_service_charge,set_social_insurance,set_target_margin,set_tax_setup,set_ticket_status,set_time_price,set_tip_sharers,'
+  'set_receipt_setup,set_reservation_status,set_section_hours,set_service_charge,set_social_insurance,set_target_margin,set_tax_setup,set_ticket_status,set_time_price,set_tip_sharers,set_usd_rate_band,'
   'set_variant_barcode,set_variant_packing,set_variant_weighed,set_watch_visibility,settle_problem,settle_tab,settle_tab_offline,settle_watch_finding,snooze_alert,social_insurance,social_insurance_month,'
   'speed_ping,speed_samples,split_tab,staff_list,staff_phones,staff_schedule,start_stock_count,stock_card,stock_places,'
   'stock_transfers,stop_markdown,stop_sale_day,stop_time_price,stuck_report,submit_stock_count,supplier_records,supplier_statement,support_access,support_enter,take_pre_order,tax_setup,'
   'till_lock_minutes,time_prices,tips_month,turn_off_phone_warnings,turn_on_phone_warnings,two_step_codes_left,undo_bank_statement,'
-  'unlink_phone,unlock_period,unlock_till,update_business_details,update_delivery_platform,update_item,update_prepaid_expense,update_supplier,update_variant,use_by_lots,use_two_step_code,'
+  'unlink_phone,unlock_period,unlock_till,update_business_details,update_delivery_platform,update_item,update_prepaid_expense,update_supplier,update_variant,use_by_lots,use_two_step_code,usd_rates_used,'
   'void_sale,waste_coach,watch_list,watch_may_see',
   'signed-in users can call exactly the intended API');
 -- The public (the anon key is in every page) may call only the clock's four,

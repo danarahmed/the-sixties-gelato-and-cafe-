@@ -110,6 +110,7 @@ Plan a short window when the café is closed.
 | Loyalty points as money owed (`0113`)              | ⏳ Waiting for the owner to apply it in the SQL editor, after `0112`                                                                                                                                                                                                                                                                                                                                                                             |
 | The books' smaller gaps (`0114`)                   | ⏳ Waiting for the owner to apply it in the SQL editor, after `0113`                                                                                                                                                                                                                                                                                                                                                                             |
 | The supplier's smaller gaps (`0115`)               | ⏳ Waiting for the owner to apply it in the SQL editor, after `0114`                                                                                                                                                                                                                                                                                                                                                                             |
+| The dollar's rate typed with each payment (`0116`) | ⏳ Waiting for the owner to apply it in the SQL editor, after `0115`                                                                                                                                                                                                                                                                                                                                                                             |
 
 ## 0. Before you start
 
@@ -4603,6 +4604,18 @@ open months. Rehearsed with `tests/sql/supplier_gaps.test.sql`. Applied after
 `0114`, as each one before it: open
 `supabase/migrations/0115_supplier_gaps.sql` on GitHub, **Raw**, copy all of
 it, paste it into Supabase's **SQL Editor** → **New query**, **Run**.
+
+## After `0116`
+
+Migration `0116` brings **the dollar's rate typed with each payment**: the
+till offers the last rate a manager used and the cashier types today's; within
+2% of it (the owner may set another band on Sales → Dollars) it is taken, and
+beyond it a manager approves it with their PIN. How old the last rate is no
+longer stops dollars being taken. Sales → Dollars shows the rates each person
+used this week. Rehearsed with `tests/sql/dollar_rate_typed.test.sql`. Applied
+after `0115`, as each one before it: open
+`supabase/migrations/0116_dollar_rate_typed.sql` on GitHub, **Raw**, copy all
+of it, paste it into Supabase's **SQL Editor** → **New query**, **Run**.
 
 ## Clearing the test records
 
