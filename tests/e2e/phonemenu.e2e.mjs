@@ -65,9 +65,14 @@ console.log("▸ the waiter scans it at the till");
     ((await page.locator(".order-total").textContent()) ?? "").includes("2 item"),
     "the two espressos are on the bill",
   );
-  await screen.getByTestId("customer-screen-total").waitFor({ timeout: 10000 });
+  // The customer's screen catches up a moment after the till.
   check(
-    ((await screen.getByTestId("customer-screen-total").textContent()) ?? "").includes("5,000"),
+    await screen
+      .getByTestId("customer-screen-total")
+      .filter({ hasText: "5,000" })
+      .waitFor({ timeout: 10000 })
+      .then(() => true)
+      .catch(() => false),
     "and the customer's screen shows them, 5,000",
   );
   await ctx.close();
