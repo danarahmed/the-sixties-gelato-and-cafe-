@@ -110,6 +110,9 @@ select t from (values ('business_part')) v(t) where to_regclass('public.' || t) 
 insert into reset_keep
 select t from (values ('kitchen_station'), ('category_station')) v(t)
  where to_regclass('public.' || t) is not null;
+-- Each customer's own prices (0111) are the café's settings: kept.
+insert into reset_keep
+select t from (values ('customer_price')) v(t) where to_regclass('public.' || t) is not null;
 -- Who gave the system's support access, and each visit (0109), are kept, as the audit trail is.
 insert into reset_keep
 select t from (values ('support_grant'), ('support_twin'), ('support_visit')) v(t)
@@ -196,6 +199,8 @@ begin
        -- The kitchen's tickets and the bookings (0110).
        || case when to_regclass('public.kitchen_ticket') is not null
                then ', kitchen_ticket_line, kitchen_ticket, reservation' else '' end
+       -- Quotes and delivery notes (0111), with the invoices they went with.
+       || case when to_regclass('public.sales_quote') is not null then ', delivery_note, sales_quote' else '' end
        || ' restart identity';
 end $$;
 

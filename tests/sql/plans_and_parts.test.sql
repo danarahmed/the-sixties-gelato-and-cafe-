@@ -17,7 +17,7 @@ select test.act_as('owner@example.com');
 select test.eq(my_profile() ->> 'plan', 'business', 'a café is on the Business plan');
 select test.eq(my_profile() ->> 'business_type', 'cafe', 'and a café');
 select test.ok(not exists (select 1 from jsonb_array_elements_text(my_profile() -> 'permissions') p where p like 'off:%'
-                   and p not in ('off:kitchen', 'off:courses', 'off:reservations')),
+                   and p not in ('off:kitchen', 'off:courses', 'off:reservations', 'off:price_lists', 'off:quotes')),
   'with every part on');
 select test.throws($$select set_business_plan('00000000-0000-0000-0000-0000000000b1', 'starter', 'Smaller café')$$,
   'Only the system''s administrators see this', 'a café''s owner does not change its plan');
@@ -30,7 +30,7 @@ select test.ok(jsonb_array_length(admin_businesses()) >= 1, 'the administrator s
 select set_business_plan('00000000-0000-0000-0000-0000000000b1', 'starter', 'Starting small');
 select test.eq((select string_agg(p, ',' order by p) from jsonb_array_elements_text(my_profile() -> 'permissions') p
                  where p like 'off:%'
-                   and p not in ('off:kitchen', 'off:courses', 'off:reservations')), 'off:accounting,off:branches,off:purchasing,off:recipes,off:staff,off:wholesale',
+                   and p not in ('off:kitchen', 'off:courses', 'off:reservations', 'off:price_lists', 'off:quotes')), 'off:accounting,off:branches,off:purchasing,off:recipes,off:staff,off:wholesale',
   'Starter: those parts are off, and the screens are told');
 select test.ok(not (my_profile() -> 'permissions') ? 'accounting.post', 'their permissions are not held');
 select test.eq(current_has_permission('accounting.post'), false, 'nor by the database');
@@ -75,7 +75,7 @@ select test.act_as('owner@example.com');
 select set_business_type('cafe', 'Back to the café');
 select set_business_plan('00000000-0000-0000-0000-0000000000b1', 'business', 'Everything again');
 select test.ok(not exists (select 1 from jsonb_array_elements_text(my_profile() -> 'permissions') p where p like 'off:%'
-                   and p not in ('off:kitchen', 'off:courses', 'off:reservations')),
+                   and p not in ('off:kitchen', 'off:courses', 'off:reservations', 'off:price_lists', 'off:quotes')),
   'the Business plan: every part on again, nothing lost');
 select test.as_admin();
 select test.eq((select count(*)::int from audit_log where action in ('business.plan', 'business.part', 'business.type')),

@@ -2054,6 +2054,31 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### The supplier parts (`0111`)
+
+- Two parts, on by default for a bakery and a supplier: `price_lists` (Price
+  lists for each customer) and `quotes` (Quotes, sales orders and delivery
+  notes). Credit notes go with `wholesale`.
+- `make_item_sellable(item, name, prices, pack, category)` (recipe.edit): a
+  stock item on the menu, its one size's recipe the item itself (`pack` of
+  it: 1, or a carton's 24), through `create_product`.
+- **`customer_price`**: a customer's own price for a size.
+  `set_customer_price`, `customer_prices` (credit.manage).
+  `customer_line_price`: a quote's price (`sixties.quote_prices`), else theirs
+  (while `price_lists` is on), else the menu's less their wholesale
+  percentage; `invoice_customer` prices each line with it.
+- **`sales_quote`**: numbered, for a customer on account, `draft` → `sent` →
+  `accepted` (the sales order) → `invoiced`, or `cancelled`; its lines kept
+  with their prices. `save_quote`, `set_quote_status`, `quote_to_invoice`
+  (invoiced at its own prices), `quotes`.
+- **`delivery_note`**: numbered, for an invoice, its driver and route,
+  `prepared` → `out` → `delivered` (and who signed for it).
+  `make_delivery_note`, `set_delivery_status`, `delivery_notes`,
+  `recent_invoices`.
+- `credit_customer(customer, amount, reason, key)`: a credit note, kept as a
+  `customer_payment` on account 4200 (Dr 4200, Cr 1110), so it settles their
+  invoices oldest first as a payment does.
+
 ### The restaurant parts (`0110`)
 
 - Three parts, on by default for a restaurant only: `kitchen` (Kitchen screens

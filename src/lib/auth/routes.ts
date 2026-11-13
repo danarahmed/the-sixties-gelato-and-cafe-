@@ -40,6 +40,14 @@ export const NAV: NavEntry[] = [
   { group: REVENUE, href: "/platforms", key: "nav.platforms", anyOf: ["cost.view"] },
   // Who buys from the café, and their points (0050).
   { group: REVENUE, href: "/customers", key: "nav.customers", anyOf: ["customer.view"] },
+  // Selling wholesale: quotes, delivery notes, credit notes, prices (0111).
+  {
+    group: REVENUE,
+    href: "/wholesale",
+    key: "nav.wholesale",
+    anyOf: ["credit.manage"],
+    part: "quotes",
+  },
 
   {
     group: SPENDING,
@@ -257,7 +265,13 @@ export function partOn(permissions: readonly string[], part: string | undefined)
 }
 
 /** The parts added after 0108's plans (0110 and on): off until the database has them. */
-const LATER_PARTS: ReadonlySet<string> = new Set(["kitchen", "courses", "reservations"]);
+const LATER_PARTS: ReadonlySet<string> = new Set([
+  "kitchen",
+  "courses",
+  "reservations",
+  "price_lists",
+  "quotes",
+]);
 
 /** Whether the menu offers them a screen: they may open it, and its part is on. */
 export function offered(

@@ -171,6 +171,9 @@ begin
        -- The kitchen (its stations, tickets) and the bookings (0110).
        || case when to_regclass('public.kitchen_ticket') is not null
                then ', category_station, kitchen_station, kitchen_ticket_line, kitchen_ticket, reservation' else '' end
+       -- The customers' prices, quotes and delivery notes (0111).
+       || case when to_regclass('public.sales_quote') is not null
+               then ', customer_price, delivery_note, sales_quote' else '' end
        || ' restart identity';
 end $$;
 

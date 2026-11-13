@@ -7330,5 +7330,43 @@
       "/pos"
     ],
     "shots": []
+  },
+  {
+    "path": "/wholesale",
+    "title": "Wholesale",
+    "area": "Selling",
+    "summary": "For a bakery or a supplier selling to shops and hotels on account: quotes, invoiced at the prices they gave; delivery notes out with the driver, then signed for; credit notes for what came back, taken off what the customer owes; each customer's own price for a product; and a stock item put on the menu as it is, or by the carton. Only when the business has the Quotes part on (Settings → Plan and parts).",
+    "who": [
+      {
+        "role": "owner, general_manager, branch_manager, accountant",
+        "can": "make quotes and invoice them; make delivery notes; give credit notes; set customers' prices; put a stock item on the menu"
+      }
+    ],
+    "get_there": "Menu → Wholesale.",
+    "before": [
+      "The customer buys on account (Customers → the customer → On account)."
+    ],
+    "parts": [],
+    "states": [],
+    "messages": [],
+    "skipped_messages": [],
+    "what_if": [
+      {
+        "case": "The price changed after the quote",
+        "do": "The quote keeps its own prices when it is invoiced; make a new quote for the new prices."
+      },
+      {
+        "case": "A carton came back broken",
+        "do": "Give a credit note with why: it is taken off what they owe."
+      }
+    ],
+    "tips": [
+      "A carton is a product whose one size takes the carton's count of the item from stock."
+    ],
+    "related": [
+      "/customers",
+      "/products"
+    ],
+    "shots": []
   }
 ]

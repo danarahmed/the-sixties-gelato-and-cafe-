@@ -68,6 +68,7 @@ import packing from "./packing";
 import plans from "./plans";
 import support from "./support";
 import restaurant from "./restaurant";
+import wholesale from "./wholesale";
 import today from "./today";
 import help from "./help";
 
@@ -143,6 +144,7 @@ export const BOOKS: Record<string, PhraseBook> = {
   plans,
   support,
   restaurant,
+  wholesale,
 };
 
 const byLocale = new Map<string, Record<string, string>>();

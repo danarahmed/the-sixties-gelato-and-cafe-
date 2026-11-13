@@ -823,3 +823,6 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   printers per station; a waiter takes orders on a phone with the till's own
   screen; the menu engineering report is the Menu matrix. A bill joined to
   another must not be printed or discounted yet.
+- A credit note (`0111`) is an amount taken off what a customer owes, with
+  why: goods that came back go into stock with a count or a correction, and
+  while tax is on, a credit note does not give its tax back by itself.

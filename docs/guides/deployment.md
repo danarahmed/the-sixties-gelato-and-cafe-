@@ -105,6 +105,7 @@ Plan a short window when the café is closed.
 | Plans and parts (`0108`)                           | ⏳ Waiting for the owner to apply it in the SQL editor, after `0107`                                                                                                                                                                                                                                                                                                                                                                             |
 | Running many businesses (`0109`)                   | ⏳ Waiting for the owner to apply it in the SQL editor, after `0108`                                                                                                                                                                                                                                                                                                                                                                             |
 | The restaurant parts (`0110`)                      | ⏳ Waiting for the owner to apply it in the SQL editor, after `0109`                                                                                                                                                                                                                                                                                                                                                                             |
+| The supplier parts (`0111`)                        | ⏳ Waiting for the owner to apply it in the SQL editor, after `0110`                                                                                                                                                                                                                                                                                                                                                                             |
 
 ## 0. Before you start
 
@@ -4543,6 +4544,17 @@ for The Sixty's until a part is turned on. Rehearsed with
 `tests/sql/restaurant.test.sql`. Applied after `0109`, as each one before it:
 open `supabase/migrations/0110_restaurant.sql` on GitHub, **Raw**, copy all
 of it, paste it into Supabase's **SQL Editor** → **New query**, **Run**.
+
+## After `0111`
+
+Migration `0111` brings **the supplier parts**, off for a café until the
+owner turns them on (Settings → Plan and parts): Menu → Wholesale, with
+quotes invoiced at their own prices, delivery notes out with the driver and
+signed for, credit notes, each customer's own prices, and a stock item put on
+the menu as it is or by the carton. Rehearsed with
+`tests/sql/supplier.test.sql`. Applied after `0110`, as each one before it:
+open `supabase/migrations/0111_supplier.sql` on GitHub, **Raw**, copy all of
+it, paste it into Supabase's **SQL Editor** → **New query**, **Run**.
 
 ## Clearing the test records
 
