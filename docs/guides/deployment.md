@@ -111,6 +111,7 @@ Plan a short window when the café is closed.
 | The books' smaller gaps (`0114`)                   | ⏳ Waiting for the owner to apply it in the SQL editor, after `0113`                                                                                                                                                                                                                                                                                                                                                                             |
 | The supplier's smaller gaps (`0115`)               | ⏳ Waiting for the owner to apply it in the SQL editor, after `0114`                                                                                                                                                                                                                                                                                                                                                                             |
 | The dollar's rate typed with each payment (`0116`) | ⏳ Waiting for the owner to apply it in the SQL editor, after `0115`                                                                                                                                                                                                                                                                                                                                                                             |
+| Budgets (`0117`)                                   | ⏳ Waiting for the owner to apply it in the SQL editor, after `0116`                                                                                                                                                                                                                                                                                                                                                                             |
 
 ## 0. Before you start
 
@@ -4616,6 +4617,16 @@ used this week. Rehearsed with `tests/sql/dollar_rate_typed.test.sql`. Applied
 after `0115`, as each one before it: open
 `supabase/migrations/0116_dollar_rate_typed.sql` on GitHub, **Raw**, copy all
 of it, paste it into Supabase's **SQL Editor** → **New query**, **Run**.
+
+## After `0117`
+
+Migration `0117` brings **budgets**: Reports → Against last year and the
+budget shows each revenue and cost account beside the same days a year before
+and the budget, and the owner or the accountant sets this month's budget there
+(started from last month's figures with one press). Rehearsed with
+`tests/sql/budgets.test.sql`. Applied after `0116`, as each one before it: open
+`supabase/migrations/0117_budgets.sql` on GitHub, **Raw**, copy all of it,
+paste it into Supabase's **SQL Editor** → **New query**, **Run**.
 
 ## Clearing the test records
 

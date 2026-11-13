@@ -21,7 +21,7 @@ sql(`insert into system_admin (auth_user_id) select auth_user_id from app_user w
 {
   const { ctx, page } = await signIn(browser, "owner");
   await open(page, "/settings");
-  await page.getByTestId("system-admin").getByRole("link").click();
+  await page.getByTestId("system-admin").getByRole("link", { name: "Speed" }).click();
   await page.waitForURL(/\/admin\/speed$/);
   await page.getByTestId("speed-measure").click();
   await page.getByTestId("speed-result").waitFor({ timeout: 30000 });

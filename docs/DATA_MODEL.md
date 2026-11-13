@@ -2054,6 +2054,16 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### Budgets (`0117`)
+
+- **`budget_line`** (business, month, account code, amount ≥ 0): a month's
+  budget for a revenue or cost account. `set_budget(month, {code: amount})`
+  (the owner, or accounting.post; 0 takes an account off; each change on the
+  audit trail), `budget_month(month)` and `budget_for(from, to)` (profit.view:
+  each month's budget shared by the days of it the dates cover).
+- Reports → Compare reads `report_profit_and_loss` for the dates and the same
+  days a year before, beside `budget_for`.
+
 ### The dollar's rate typed with each payment (`0116`)
 
 - No daily rate: `sale_dollars` takes each payment's own rate through

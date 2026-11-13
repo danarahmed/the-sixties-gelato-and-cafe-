@@ -74,6 +74,7 @@ import loyaltyOwed from "./loyaltyOwed";
 import smallGaps from "./smallGaps";
 import supplierGaps from "./supplierGaps";
 import dollarRate from "./dollarRate";
+import budgets from "./budgets";
 import today from "./today";
 import help from "./help";
 
@@ -155,6 +156,7 @@ export const BOOKS: Record<string, PhraseBook> = {
   smallGaps,
   supplierGaps,
   dollarRate,
+  budgets,
 };
 
 const byLocale = new Map<string, Record<string, string>>();

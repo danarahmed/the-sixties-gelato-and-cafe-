@@ -137,7 +137,7 @@ select test.eq((
   'acknowledge_alert,add_attendance,add_delivery_platform,add_fixed_asset,add_item_unit,add_place,add_variant,'
   'adjust_payroll_line,adjust_points,adjust_stock,admin_businesses,admin_problem_reports,alert_thresholds,allocate_credit,app_words,'
   'approvals_waiting,approvals_waiting_count,approve_payroll,approve_po,approve_stock_count,'
-  'attach_document,attendance_list,bank_book,batch_reconciliation,branch_position,business_details,business_parts,buying_list,'
+  'attach_document,attendance_list,bank_book,batch_reconciliation,branch_position,budget_for,budget_month,business_details,business_parts,buying_list,'
   'cancel_advance,cancel_attendance,cancel_bill,cancel_card_settlement,cancel_money_move,'
   'cancel_platform_settlement,cancel_po,cancel_pre_order,cancel_prepaid_expense,cancel_production,'
   'cancel_salary_payment,cancel_scheduled_price,cancel_scheduled_recipe,cancel_stock_count,'
@@ -181,7 +181,7 @@ select test.eq((
   'save_language,save_modifier,save_modifier_group,save_packing_item,save_payment_method,save_phrases,save_po,'
   'save_push_device,save_quote,save_reservation,save_sale_day,save_schedule,save_section,save_speed_sample,save_tab,save_table,send_po,send_sale_to_kitchen,send_stock_transfer,send_tab_to_kitchen,'
   'send_test_warning,service_charges,set_account_in_use,set_alert_thresholds,set_batch_use_by,'
-  'set_business_closed,set_business_paid_until,set_business_part,set_business_pilot,set_business_plan,set_business_rule,set_business_type,set_category_section,set_category_station,set_clock_pin,set_customer_account,set_customer_price,set_delivery_status,set_employee_left,'
+  'set_budget,set_business_closed,set_business_paid_until,set_business_part,set_business_pilot,set_business_plan,set_business_rule,set_business_type,set_category_section,set_category_station,set_clock_pin,set_customer_account,set_customer_price,set_delivery_status,set_employee_left,'
   'set_employee_pay,set_employee_social_insurance,set_fx_rate,set_item_keeps,set_item_supplier,set_item_use_by,set_lot_use_by,set_loyalty_owed,set_member_active,set_member_place,'
   'set_member_roles,set_modifier_price,set_modifier_recipe,set_my_pin,set_no_stock,set_place_active,set_place_clock_spot,set_place_sections,'
   'set_price,set_product_details,set_product_image,set_product_modifiers,set_quote_status,set_receipt_logo,'
@@ -190,7 +190,7 @@ select test.eq((
   'speed_ping,speed_samples,split_tab,staff_list,staff_phones,staff_schedule,start_stock_count,stock_card,stock_places,'
   'stock_transfers,stop_markdown,stop_sale_day,stop_time_price,stuck_report,submit_stock_count,supplier_records,supplier_statement,support_access,support_enter,take_pre_order,tax_setup,'
   'till_lock_minutes,time_prices,tips_month,turn_off_phone_warnings,turn_on_phone_warnings,two_step_codes_left,undo_bank_statement,'
-  'unlink_phone,unlock_period,unlock_till,update_business_details,update_delivery_platform,update_item,update_prepaid_expense,update_supplier,update_variant,use_by_lots,use_two_step_code,usd_rates_used,'
+  'unlink_phone,unlock_period,unlock_till,update_business_details,update_delivery_platform,update_item,update_prepaid_expense,update_supplier,update_variant,usd_rates_used,use_by_lots,use_two_step_code,'
   'void_sale,waste_coach,watch_list,watch_may_see',
   'signed-in users can call exactly the intended API');
 -- The public (the anon key is in every page) may call only the clock's four,

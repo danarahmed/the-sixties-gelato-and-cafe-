@@ -177,6 +177,8 @@ begin
        -- Social insurance: on or off, and what was paid to the government (0112).
        || case when to_regclass('public.social_insurance_payment') is not null
                then ', social_insurance_payment, social_insurance_setup' else '' end
+       -- The budgets (0117).
+       || case when to_regclass('public.budget_line') is not null then ', budget_line' else '' end
        -- The dollar rates used, and how far a cashier's may be (0116).
        || case when to_regclass('public.usd_rate_used') is not null then ', usd_rate_used, usd_rate_setup' else '' end
        -- What suppliers paid back of their credits (0115).

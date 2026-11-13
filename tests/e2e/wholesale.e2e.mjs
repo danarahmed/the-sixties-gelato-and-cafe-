@@ -6,7 +6,7 @@ import { chromium, check, done, open, signIn, sql } from "./lib.mjs";
 const browser = await chromium.launch();
 const last = (q) => sql(q).split("\n").pop();
 sql(`insert into customer (business_id, full_name, phone, on_account, credit_limit, terms_days)
-     values ('00000000-0000-0000-0000-0000000000b1', 'E2E Hotel', '0750 999 0000', true, 500000, 30)`);
+     values ('00000000-0000-0000-0000-0000000000b1', 'E2E Hotel', '+9647509990000', true, 500000, 30)`);
 
 console.log("▸ quotes turned on, a quote made, accepted and invoiced");
 {

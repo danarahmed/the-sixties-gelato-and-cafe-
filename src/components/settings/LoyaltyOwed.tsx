@@ -19,13 +19,18 @@ export function LoyaltyOwed({ owed, isOwner }: { owed: Owed; isOwner: boolean })
   const router = useRouter();
   const [busy, start] = useTransition();
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  // Shown at once, put back if the database refuses it.
+  const [on, setOn] = useState(owed.enabled);
 
   function set(enabled: boolean) {
     setMsg(null);
+    setOn(enabled);
     start(async () => {
       const r = await setLoyaltyOwedAction({ enabled });
-      if (!r.ok) setMsg({ ok: false, text: r.error });
-      else {
+      if (!r.ok) {
+        setOn(owed.enabled);
+        setMsg({ ok: false, text: r.error });
+      } else {
         setMsg({
           ok: true,
           text: enabled
@@ -48,7 +53,7 @@ export function LoyaltyOwed({ owed, isOwner }: { owed: Owed; isOwner: boolean })
       <label className="chip" style={{ width: "fit-content" }}>
         <input
           type="checkbox"
-          checked={owed.enabled}
+          checked={on}
           disabled={!isOwner || busy}
           onChange={(e) => set(e.target.checked)}
           data-testid="loyalty-owed-on"

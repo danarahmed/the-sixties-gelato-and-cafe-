@@ -45,7 +45,8 @@ export function SocialInsuranceCard({
   const [er, setEr] = useState(String(si.employerPercent));
   const [emp, setEmp] = useState(String(si.employeePercent));
   const [paying, setPaying] = useState<string | null>(null);
-  const off = new Set(si.offFor.map((p) => p.id));
+  // Who is left out, shown at once and put back if the database refuses it.
+  const [off, setOff] = useState(() => new Set(si.offFor.map((p) => p.id)));
   const changed =
     enabled !== si.enabled ||
     Number(er) !== si.employerPercent ||
@@ -69,10 +70,17 @@ export function SocialInsuranceCard({
 
   function person(id: string, on: boolean) {
     setMsg(null);
+    const before = off;
+    const next = new Set(off);
+    if (on) next.delete(id);
+    else next.add(id);
+    setOff(next);
     start(async () => {
       const r = await setEmployeeSocialInsuranceAction({ employeeId: id, on });
-      if (!r.ok) setMsg({ ok: false, text: r.error });
-      else router.refresh();
+      if (!r.ok) {
+        setOff(before);
+        setMsg({ ok: false, text: r.error });
+      } else router.refresh();
     });
   }
 
