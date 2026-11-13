@@ -42,7 +42,8 @@ import { SaleDays } from "@/components/settings/SaleDays";
 import { getPackingChoices, getPackingSetup } from "@/lib/db/packing";
 import { PackingSettings } from "@/components/settings/PackingSettings";
 import { getBusinessParts } from "@/lib/db/parts";
-import { PlanAndParts, PLAN_LABEL } from "@/components/settings/PlanAndParts";
+import { PlanAndParts } from "@/components/settings/PlanAndParts";
+import { PLAN_LABEL } from "@/lib/plans";
 import { getSupportAccess } from "@/lib/db/support";
 import { SupportAccess } from "@/components/settings/SupportAccess";
 import {

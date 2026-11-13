@@ -11,7 +11,7 @@ import {
 import { enterSupportAction } from "@/lib/actions/support";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Field, Notice, inputStyle } from "@/components/ui";
-import { PLAN_LABEL, TYPE_LABEL } from "@/components/settings/PlanAndParts";
+import { PLAN_LABEL, TYPE_LABEL } from "@/lib/plans";
 import { dateTimeIn } from "@/lib/dates";
 
 type Plan = "starter" | "complete" | "business";
