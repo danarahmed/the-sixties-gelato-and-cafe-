@@ -1,7 +1,8 @@
 // The menu on customers' phones (0118). The owner turns it on on Settings;
 // on a phone that is not signed in, its link opens the menu; two espressos
 // are chosen and shown as a QR. At the till, the scanner types the QR's code
-// and the two espressos are on the bill. Turned off, the link opens nothing.
+// and the two espressos are on the bill, and on the customer's screen beside
+// the till. Turned off, the link opens nothing.
 import { chromium, check, done, open, signIn, sql, BASE } from "./lib.mjs";
 
 const browser = await chromium.launch();
@@ -47,6 +48,10 @@ console.log("▸ a customer's phone, not signed in");
 console.log("▸ the waiter scans it at the till");
 {
   const { ctx, page } = await signIn(browser, "cashier");
+  // The customer's screen, a second window of the same till.
+  const screen = await ctx.newPage();
+  await open(screen, "/pos/customer");
+  await screen.getByTestId("customer-screen").waitFor({ timeout: 15000 });
   await open(page, "/pos");
   const quick = page.locator(".strip-chip", { hasText: "Quick sale" });
   if (await quick.isVisible()) await quick.click();
@@ -59,6 +64,11 @@ console.log("▸ the waiter scans it at the till");
   check(
     ((await page.locator(".order-total").textContent()) ?? "").includes("2 item"),
     "the two espressos are on the bill",
+  );
+  await screen.getByTestId("customer-screen-total").waitFor({ timeout: 10000 });
+  check(
+    ((await screen.getByTestId("customer-screen-total").textContent()) ?? "").includes("5,000"),
+    "and the customer's screen shows them, 5,000",
   );
   await ctx.close();
 }

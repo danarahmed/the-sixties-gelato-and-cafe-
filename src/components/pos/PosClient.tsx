@@ -111,6 +111,7 @@ import { noteTillKeptAction } from "@/lib/actions/offline";
 import { reasonKey } from "@/lib/reasons";
 import { changeGiven, type Payment } from "@/lib/payments";
 import { RATE_NEEDS_APPROVAL, RATE_REFUSED } from "@/lib/fx";
+import { CUSTOMER_SCREEN_CHANNEL, type CustomerScreenMessage } from "@/lib/customerScreen";
 import { Icon } from "@/components/Icon";
 import {
   keptId,
@@ -926,6 +927,40 @@ export function PosClient({
       addons: addonNames(l.addons, menu, locale, l.addons),
       ...(byId.get(l.variantId)?.soldByWeight ? { weighed: true } : {}),
     }));
+
+  // The customer's screen (plan 11, item 4): told what is rung up, and what was paid.
+  const screenRef = useRef<BroadcastChannel | null>(null);
+  useEffect(() => {
+    if (typeof BroadcastChannel === "undefined") return;
+    screenRef.current = new BroadcastChannel(CUSTOMER_SCREEN_CHANNEL);
+    return () => {
+      screenRef.current?.close();
+      screenRef.current = null;
+    };
+  }, []);
+  useEffect(() => {
+    const ch = screenRef.current;
+    if (!ch) return;
+    const o = showBill ? bill : quick;
+    let m: CustomerScreenMessage;
+    if (o && o.lines.length > 0)
+      m = {
+        kind: "order",
+        business: businessName,
+        lines: printLines(o).map((l) => ({ name: l.name, qty: l.qty, amount: l.amount })),
+        total: printTotals(o).total,
+      };
+    else if (receipt)
+      m = {
+        kind: "paid",
+        business: businessName,
+        total: receipt.net + (receipt.service ?? 0) + (receipt.tip ?? 0),
+        change: receipt.change,
+      };
+    else m = { kind: "idle", business: businessName };
+    ch.postMessage(m);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bill, quick, showBill, receipt]);
 
   /** Send slips to the printer, after whatever is printing now. */
   const print = (slips: (Slip | null)[]) => {

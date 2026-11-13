@@ -57,6 +57,17 @@ const phrases: PhraseBook = {
   "WhatsApp…": { ar: "واتساب…", ckb: "واتساپ…" },
   "Their WhatsApp number": { ar: "رقم واتسابهم", ckb: "ژمارەی واتساپەکەیان" },
   "Send by WhatsApp": { ar: "أرسل عبر واتساب", ckb: "بە واتساپ بنێرە" },
+  // The customer's screen.
+  "Welcome!": { ar: "أهلًا وسهلًا!", ckb: "بەخێربێن!" },
+  "Thank you!": { ar: "شكرًا لك!", ckb: "سوپاس!" },
+  "Paid {amount}": { ar: "المدفوع {amount}", ckb: "دراوە {amount}" },
+  "Your change: {amount}": { ar: "الباقي لك: {amount}", ckb: "گەڕاوەکەت: {amount}" },
+  "The customer's screen": { ar: "شاشة الزبون", ckb: "شاشەی کڕیار" },
+  "A screen turned to the customer: open their screen on it, from this till, and it shows what you ring up and the total.":
+    {
+      ar: "شاشة موجّهة إلى الزبون: افتح شاشته عليها من هذا الصندوق، فتعرض ما تسجّله والمجموع.",
+      ckb: "شاشەیەک ڕووی لە کڕیارە: شاشەکەی لەسەری بکەرەوە لەم خاڵی فرۆشتنەوە، ئەوەی تۆمار دەکەیت و کۆی گشتی پیشان دەدات.",
+    },
 };
 
 export default phrases;
