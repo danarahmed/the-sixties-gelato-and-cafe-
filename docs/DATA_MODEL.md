@@ -2054,6 +2054,36 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### citext out of the public schema (`0123`)
+
+- The `citext` add-on (the type of `app_user.email`, its only use) moves from
+  `public` to `extensions`, where the test database always had it: its 47
+  functions are no longer listed among the system's own.
+- Emails match as before: `invite_member`, `list_members` and
+  `link_confirmed_login` compare `lower(email::text)`; no index, view, policy,
+  constraint or trigger names the type, and the app never filters by email.
+
+### A fixed search_path for every function (`0122`)
+
+- The 24 helpers `0099` left without one (called for each line of a sale or a
+  report: `money_round`, `business_local_date`, `tender_account`, `works_on`,
+  …) get `search_path = public, extensions`. Measured, 200,000 calls each: 1 to
+  4 millionths of a second more a call; no index, view, policy or constraint
+  uses any of them.
+- From here every function in `public` has a fixed `search_path`
+  (`tests/sql/search_path.test.sql` fails a new one without).
+
+### Use-by, for a database that went on without it (`0121`)
+
+- The live database was given `0099` to `0120` without `0098`. `0121` is
+  `0098`, statement for statement, put underneath them: it leaves
+  `rule_definitions` as `0099` wrote it, and slips `0098`'s layers in below
+  `0099`'s (`rule_defaults_0098` → `rule_defaults_0097`,
+  `alert_conditions_0098` → `alert_conditions_0095`).
+- Where `0098` was applied in its turn it does nothing; a database that is
+  neither is refused, untouched. Nothing new is added to the model:
+  see "Use-by for everything that goes off (`0098`)".
+
 ### Practice for each type of business (`0120`)
 
 - `practice_seed` makes the practice café of the real café's type and plan,

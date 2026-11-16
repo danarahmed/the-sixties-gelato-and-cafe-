@@ -24,7 +24,9 @@
 #      of test trading (tests/sql/reset/trading.sql), it rehearses clearing
 #      test records with supabase/remediation/reset-test-data.sql: its
 #      refusals, its dry run, and a café that trades again from nothing
-#      afterwards (tests/sql/reset/*.check.sql).
+#      afterwards (tests/sql/reset/*.check.sql). And it builds a database the
+#      way the live one was built (0099 to 0120 without 0098, then 0121, which
+#      puts 0098 underneath): its schema must be the template's, line for line.
 #
 # Needs a PostgreSQL 15+ server you may create databases on. It is NEVER
 # pointed at the production Supabase project — it creates and drops its own.
@@ -184,6 +186,35 @@ run sixties_tpl supabase/seed/01_master.sql >/dev/null
 run sixties_tpl supabase/seed/02_recipes.sql >/dev/null
 run sixties_tpl tests/sql/harness/fixtures.sql >/dev/null
 echo "  $(ls supabase/migrations/*.sql | wc -l) migrations applied"
+
+# ------------------------------------------------- 3·0. 0098, late (as live had it)
+# The live database was given 0099 to 0120 without 0098; 0121 puts 0098
+# underneath them. A database built that way must end the same as one built in
+# order: every table, column, function, grant, trigger and policy.
+if [ $# -eq 0 ] && [ -f supabase/migrations/0121_use_by_late.sql ]; then
+  echo "▸ 0098 late: every migration but 0098 up to 0120, then the rest, as the live database had them"
+  fresh_db sixties_late
+  base_setup sixties_late
+  late=$(ls supabase/migrations/ | cut -c1-4 | awk '$1 != "0098" && $1 <= "0120"' | tr '\n' ' ')
+  schema_of() { pg_dump -s -n public -d "$1" | grep -Ev '^\\(un)?restrict '; }
+  if apply_sequence sixties_late "$late" && apply_migrations sixties_late 0121 9999; then
+    if out=$(diff <(schema_of sixties_tpl) <(schema_of sixties_late)); then
+      pass=$((pass + 1)); echo "  ✓ ends the same as a database built in order"
+    else
+      fail=$((fail + 1)); echo "  ✗ differs from a database built in order:"; echo "$out" | head -8 | sed 's/^/      /'
+    fi
+    # Given it again, 0121 changes nothing.
+    if run_migration sixties_late supabase/migrations/0121_use_by_late.sql >/dev/null \
+       && diff <(schema_of sixties_tpl) <(schema_of sixties_late) >/dev/null; then
+      pass=$((pass + 1)); echo "  ✓ and given 0121 again, nothing changes"
+    else
+      fail=$((fail + 1)); echo "  ✗ 0121 a second time changed something, or failed"
+    fi
+  else
+    fail=$((fail + 1))
+  fi
+  drop_db sixties_late
+fi
 
 # ------------------------------------------------------ 3a. clearing test data
 # The live database's test records are cleared by

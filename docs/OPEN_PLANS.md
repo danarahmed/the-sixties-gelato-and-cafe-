@@ -429,7 +429,10 @@ the version Next uses), source-map-js 1.2.2.
 
 **Low (tidying):**
 11. 43 helper functions without a fixed `search_path` (none runs with raised
-    rights); `citext` in the public schema.
+    rights); `citext` in the public schema. **Done:** `0099` fixed the rarely
+    called ones; `0122` the last 24 (measured: 1 to 4 millionths of a second a
+    call, so the earlier worry that it would slow every sale did not hold);
+    `0123` moves `citext` to `extensions`.
 12. Sales kept offline stay in that browser until sent.
 
 **Before selling:** an outside penetration test by a security firm, and its
