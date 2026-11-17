@@ -18,6 +18,7 @@ before the next one is given. The order of whole plans: **7** (security),
 **8** (speed), **6** (the books), **5** (the six points), **9** (many cafés),
 **10** (every business), **4** (videos in each language), **2** (selling).
 Checked so far: plan 7, plan 1 (7 November), plan 11, plan 3, plan 8 (8 November), plan 6, plan 5, plan 9, plan 10, plan 4 (12 November); plan 2 kept for before selling. **All plans checked.**
+**Plan 12** (running it every day, 17 November) is new and not yet checked: given when the owner asks for "the running plan".
 
 The steps across the plans, in the order they are done (the owner, 8 November:
 the technical side and the system's logic first; what is not technical is kept
@@ -827,7 +828,100 @@ scans: **added** (with plan 11, item 4, below).
 later, before selling, apart from the technical plans; item 6 only its first
 point (the practice café as the demo); items 4 and 6's demo to be worked on.
 
-**Beyond the eleven plans:** `docs/LIMITATIONS.md` lists many small "what it does
+## 12. Running it every day without stopping (17 November 2026)
+
+The system is built; what was missing is what keeps it running. Found on 16 and
+17 November, after `0098` was passed over on the live database (a change pasted
+by hand, with nothing keeping track). Each item says what it is for, who does
+what, and what it costs. **Not yet checked by the owner**: to be brought up
+when the owner asks for "the running plan".
+
+**What it covers, and what it does not.** With A to E done, the worst cannot
+happen unseen: losing the data, a database change skipped or wrong, a broken
+change reaching the café, the system down with nobody told, the project paused.
+What stays: the café's own internet (F), Supabase or Vercel having a bad day
+(wait; nothing is lost with C), a mistake no test catches (K), someone getting
+into an account (I), and nobody to call at night (J).
+
+**In the order to do them:**
+
+- **A. Tests that run by themselves.** Today the tests run only when Claude
+  runs them in a session; there is nothing on GitHub.
+  - GitHub runs types, lint, the unit tests and the database tests on every
+    change, and a change that fails cannot be merged. The browser tests run
+    every night and before a release (they take about an hour).
+  - Claude sets it up. Nothing from the owner. Free (a private repository has
+    2,000 minutes a month free; to be watched).
+- **B. Told when it is down.** The alerts live inside the app: when the app or
+  the database is down, so are they.
+  - A small "is it well?" address that answers only when the app reaches the
+    database (Claude). An outside service asks it every minute and messages the
+    owner's phone when it fails, and again when it is back.
+  - The owner makes a free account with such a service (UptimeRobot or Better
+    Stack) and gives it their phone; Claude gives the address to watch.
+- **C. Backups.** Plan 1: Supabase Pro (about $25 a month), a nightly copy kept
+  outside Supabase, and a restore practised on a copy, then every three months.
+  - **Before the first real sale**, not only before selling.
+  - The outside copy may go to the owner's Google Drive or to Cloudflare's
+    storage (R2, free up to 10 GB); the owner chooses.
+- **D. Database changes that cannot be skipped.**
+  - **D1, now, nothing needed from the owner:** every migration writes its own
+    line in a table as it is applied, and a check lists what the live database
+    is missing, in order. `0098` could not have been passed over.
+  - **D2, with Supabase Pro:** a test copy of the live database; each change is
+    applied to the copy first, then to the live one, in order, by itself. The
+    owner makes a Supabase access token for it (plan 9's safety net).
+- **E. The right plans for a business.** Supabase Pro comes with C. **Vercel
+  Pro** (about $20 a month) before any café pays: the free plan does not allow
+  commercial use and keeps its logs one hour.
+- **F. When the internet or the system stops: a sheet at the counter.** The
+  till keeps quick sales and table bills and sends them later; nothing else
+  works without the internet.
+  - One printed page in English, Kurdish and Arabic: what still works, what to
+    write on paper (deliveries, counts, clocking in), how to enter it
+    afterwards, who to call. Claude writes it; the owner prints it.
+- **G. How a change goes live.** One change at a time; tests (A), the test copy
+  (D2), then the live system **at a quiet hour, never during service**; Claude
+  checks it afterwards and writes one line of what changed.
+  - The app goes back to the version before in one press (Vercel). The
+    database does not: that is what C is for.
+- **H. Looked after on a rhythm.**
+  - Every week, ten minutes: the backups ran, no errors, Supabase's warnings.
+    Claude can do it by itself on a schedule and message the owner only when
+    something is wrong.
+  - Every month: the libraries the system is built on are brought up to date
+    (nothing does this today), through A.
+  - Every three months: the restore practice (C).
+- **I. Security (plan 7, items 1 to 5).** The second step on every account
+  (the app, Supabase, Vercel, GitHub, the email); the owner's password and the
+  approval PIN 4096; leaked-password protection and sign-up off in Supabase; a
+  "not a robot" check (Cloudflare Turnstile, free) on sign-in and on the phone
+  order form; the outside security test before selling.
+- **J. Someone to call.** Claude works only when a session is open. Before
+  other cafés depend on the system: one technical person who can be called in
+  an emergency (the human code review, plan 11, is the time to find them), and
+  plan 9's people part.
+- **K. A month of real trading at The Sixty's**, with the month closed in the
+  books, before selling (plan 11). No new features in its first two weeks.
+- **L. The system's own address.** Before selling: a domain of the brand's
+  (about $10 a year), pointed at Vercel, and `support@` forwarded to the
+  owner's inbox. Cloudflare for the domain, the forwarding, C's storage and
+  I's check; **not** its shield in front of the site (Vercel has its own, and
+  two do not sit well together), unless the system is attacked.
+
+**Who starts what:** A, B's address, D1 and F need nothing from the owner. C,
+D2 and E wait for Supabase Pro and Vercel Pro. B's account, I, J and L are the
+owner's to start.
+
+**Staying on Supabase and Vercel:** weighed on 17 November and kept. The big
+clouds need a full-time engineer; a rented server makes backups and failures
+the owner's own; the system is built deep into Supabase (sign-in, permissions,
+about a thousand functions, files, nightly jobs), so moving is months of work
+for nothing a café would notice. The data is ordinary PostgreSQL and can be
+taken out at any time. To be weighed again if plan 8's measurements are bad,
+if many cafés make the cost grow, or if either changes its prices or rules.
+
+**Beyond the plans:** `docs/LIMITATIONS.md` lists many small "what it does
 not do" points for each part (most minor; the large ones are in plans 6, 7 and
 10). They are weighed when that part is worked on, and real use after going live
 will add new ones.
