@@ -20,6 +20,7 @@ before the next one is given. The order of whole plans: **7** (security),
 Checked so far: plan 7, plan 1 (7 November), plan 11, plan 3, plan 8 (8 November), plan 6, plan 5, plan 9, plan 10, plan 4 (12 November); plan 2 kept for before selling. **All plans checked.**
 **Plan 12** (running it every day, 17 November) is new and not yet checked: given when the owner asks for "the running plan".
 **Plan 13** (what the owner finds while checking) is open: things are added as the owner says them, and none is started until the owner says "start".
+**Plan 14** (marketing and the brand, 17 November) is new and not yet checked: given when the owner asks for "the marketing plan".
 
 The steps across the plans, in the order they are done (the owner, 8 November:
 the technical side and the system's logic first; what is not technical is kept
@@ -987,6 +988,59 @@ worked on together. Given back when the owner asks for "the checking plan".
      put right, the internet gone, a price or stock that changed meanwhile).
      Today's tasks are one short video of the usual way each (8 to 21
      seconds). Drawn up role by role, so that each person sees their own.
+
+## 14. Marketing and the brand (17 November 2026)
+
+How the system is named, shown and offered to other cafés. **Not started, and
+not yet checked by the owner**: given when the owner asks for "the marketing
+plan". It comes after the month of real trading at The Sixty's (plan 12, K):
+marketing before then promises what has not yet been seen to work.
+
+**What sells it:** proof before polish. The Sixty's running on it every day,
+with real screens and real figures, is the strongest thing to show a café
+owner. Made-up screens are never shown as the system.
+
+**In the order to do them:**
+
+1. **The brand's decision (the owner).** `docs/SELLING_PLAN.md`, question 3,
+   still open: a neutral product name with each café's own logo, or sold under
+   the owner's brand. Nothing below starts until the system has a name.
+2. **The name and the message (Claude; free).** Names to choose from, checked
+   that the domain is free; one sentence of what it is; what it does for each
+   kind of business (café, bakery, restaurant, supplier) and for each role; in
+   English, Kurdish and Arabic.
+3. **The logo and the colours (a designer, ideally local; one fee, not known
+   yet).** A clean file that holds on a receipt and on a signboard. Not
+   generated: generated logos do not hold up, and Kurdish and Arabic letters
+   come out wrong.
+4. **The website (Claude; free, on Vercel, with plan 12 L's domain, about $10
+   a year).** What it does, the three plans and their prices, "book a demo",
+   in the three languages. The demo is the practice café (`docs/guides/demo.md`).
+5. **The real screens (Claude; free).** Screenshots and short demo videos of
+   the system itself in the three languages, recorded as the tutorials are
+   (plan 13, items 2 and 3).
+6. **The Sixty's own story (the owner; free).** Photos and short videos in the
+   café by phone: the till in use, the day closed, the owner reading the
+   figures. What changed since using it, in the owner's words.
+7. **Printed and posted (Canva, connected already; free or its small plan).**
+   A one-page sheet, a price sheet, post templates for Instagram.
+8. **Advertising clips (Higgsfield, with scripts from Claude).** For mood only:
+   a busy café, a phone showing a menu, a barista at a till. Real screens (5)
+   are laid over them, never made-up ones.
+   - The account is on the free plan with no credits (17 November). Plus: $39
+     a month, or $27 a month paid by the year ($324); 1,000 credits a month.
+     Ultra: $79, or $50 by the year ($600); 3,000. Prices of that day, in a
+     sale.
+   - **One month of Plus when the clips are wanted, a batch made, then
+     cancelled**; not a year. Several tries make one good clip, so far fewer
+     finished pieces than the credits suggest.
+9. **Reaching cafés.** The first one or two friendly cafés (plan 2), then by
+   word of mouth, visits with the demo, Instagram and WhatsApp. To be weighed
+   with the owner when 1 to 7 are done.
+
+**What it costs, as far as known:** the domain (about $10 a year), one month
+of Higgsfield when wanted ($39), and the designer's fee. The rest is Claude's
+work and the owner's time.
 
 **Beyond the plans:** `docs/LIMITATIONS.md` lists many small "what it does
 not do" points for each part (most minor; the large ones are in plans 6, 7 and
