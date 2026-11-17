@@ -960,6 +960,27 @@ worked on together. Given back when the owner asks for "the checking plan".
      (the owner, 17 November): few devices have a Sorani voice. In Kurdish the
      video plays with the Kurdish screens and captions, and no voice.
 
+3. **The tutorials follow what is switched on, and there is one for
+   everything** (17 November; the owner's answers that day).
+   - **The rule:** a feature that is off has no tutorial shown, whether it is
+     off because it is not in the plan or because it was switched off; turned
+     on, its tutorial appears with it.
+   - **Which tutorials:** the practice tasks and their videos. The "?" help
+     and the first-time tours stay as they are.
+   - **How far:** a practice task and a video for **each of the 12 parts**,
+     and for **each optional feature a café can switch on** inside them (the
+     menu on customers' phones and orders from phones, loyalty points, social
+     insurance, tax, dollars, meal deals, prices by the hour, sale days,
+     packing, the service charge, price lists, quotes and delivery notes,
+     courses and seats, the kitchen, reservations, customers on account,
+     payroll, budgets, and the rest: the full list is drawn up first and shown
+     to the owner).
+   - **Today:** 22 practice tasks, 18 with a video. Only the four newest
+     (`0120`) follow their part; the other 18 show whatever is switched on
+     (making a batch shows with recipes off). Most optional features have no
+     task at all.
+   - Each new video is recorded in the three languages, as item 2.
+
 **Beyond the plans:** `docs/LIMITATIONS.md` lists many small "what it does
 not do" points for each part (most minor; the large ones are in plans 6, 7 and
 10). They are weighed when that part is worked on, and real use after going live
