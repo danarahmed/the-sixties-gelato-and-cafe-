@@ -980,6 +980,13 @@ worked on together. Given back when the owner asks for "the checking plan".
      (making a batch shows with recipes off). Most optional features have no
      task at all.
    - Each new video is recorded in the three languages, as item 2.
+   - **How deep (the owner, 17 November): advanced, not a first look.** For
+     each role, almost every feature and every detail that role may meet in
+     its work: not only the usual way, but what goes wrong and what to do
+     then (a refusal and why, a manager's approval with their PIN, a mistake
+     put right, the internet gone, a price or stock that changed meanwhile).
+     Today's tasks are one short video of the usual way each (8 to 21
+     seconds). Drawn up role by role, so that each person sees their own.
 
 **Beyond the plans:** `docs/LIMITATIONS.md` lists many small "what it does
 not do" points for each part (most minor; the large ones are in plans 6, 7 and
