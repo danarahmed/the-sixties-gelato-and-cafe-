@@ -168,6 +168,9 @@ markdowns suggested. Two gaps:
 
 ## 4. The practice videos in each language (4 November 2026)
 
+**Not done yet** (found on 17 November): only the read-aloud tick was built;
+the three recordings wait in plan 13, item 2.
+
 The videos of the practice tasks were recorded with the app in English; in
 Arabic or Kurdish only the captions change, and the screens in the video stay
 English. The fix: record each video three times, with the app in English,
@@ -941,6 +944,21 @@ worked on together. Given back when the owner asks for "the checking plan".
    - for "any of a category", a range, from the cheapest choice to the dearest.
 
    Only for those who may see costs (`cost.view`), as elsewhere.
+
+2. **The practice videos with the system itself in each language** (17
+   November; plan 4, agreed on 12 November and **not done**: step 14 only added
+   a tick that reads the captions aloud with the device's own voice).
+   - Today: one recording a task, 18 of them, made on 4 November with the app
+     in English. In Kurdish or Arabic only the captions change.
+   - Each video recorded three times, the app in English, Arabic and Kurdish
+     (right to left for the last two); the one in the person's language is
+     played. `tests/e2e/videos.e2e.mjs` records them; it needs the language set
+     for each run, and `src/lib/help/videos.ts` a file for each language.
+   - Videos for the four tasks that have none (`kitchen_send`, `reservation`,
+     `quote`, `delivery_note`).
+   - The voice: English and Arabic generated; for Kurdish few devices have a
+     Sorani voice, so a person reads it from a script Claude writes, or the
+     owner decides to go without a Kurdish voice for now.
 
 **Beyond the plans:** `docs/LIMITATIONS.md` lists many small "what it does
 not do" points for each part (most minor; the large ones are in plans 6, 7 and
