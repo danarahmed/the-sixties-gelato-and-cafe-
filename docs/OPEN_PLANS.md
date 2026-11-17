@@ -956,9 +956,9 @@ worked on together. Given back when the owner asks for "the checking plan".
      for each run, and `src/lib/help/videos.ts` a file for each language.
    - Videos for the four tasks that have none (`kitchen_send`, `reservation`,
      `quote`, `delivery_note`).
-   - The voice: English and Arabic generated; for Kurdish few devices have a
-     Sorani voice, so a person reads it from a script Claude writes, or the
-     owner decides to go without a Kurdish voice for now.
+   - The voice: English and Arabic generated. **No Kurdish voice for now**
+     (the owner, 17 November): few devices have a Sorani voice. In Kurdish the
+     video plays with the Kurdish screens and captions, and no voice.
 
 **Beyond the plans:** `docs/LIMITATIONS.md` lists many small "what it does
 not do" points for each part (most minor; the large ones are in plans 6, 7 and
