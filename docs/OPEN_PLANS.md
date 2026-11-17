@@ -19,6 +19,7 @@ before the next one is given. The order of whole plans: **7** (security),
 **10** (every business), **4** (videos in each language), **2** (selling).
 Checked so far: plan 7, plan 1 (7 November), plan 11, plan 3, plan 8 (8 November), plan 6, plan 5, plan 9, plan 10, plan 4 (12 November); plan 2 kept for before selling. **All plans checked.**
 **Plan 12** (running it every day, 17 November) is new and not yet checked: given when the owner asks for "the running plan".
+**Plan 13** (what the owner finds while checking) is open: things are added as the owner says them, and none is started until the owner says "start".
 
 The steps across the plans, in the order they are done (the owner, 8 November:
 the technical side and the system's logic first; what is not technical is kept
@@ -920,6 +921,26 @@ about a thousand functions, files, nightly jobs), so moving is months of work
 for nothing a café would notice. The data is ordinary PostgreSQL and can be
 taken out at any time. To be weighed again if plan 8's measurements are bad,
 if many cafés make the cost grow, or if either changes its prices or rules.
+
+## 13. What the owner finds while checking (opened 17 November 2026)
+
+The owner is going through the system. Each thing found is added here as it is
+said; **nothing is started until the owner says "start"**, and then they are
+worked on together. Given back when the owner asks for "the checking plan".
+
+1. **A meal deal shows what it costs, and suggests a price** (17 November).
+   Making a deal (Products → Meal deals) only asks for a price; what the deal
+   costs and gives away is seen afterwards, in Reports, once it has sold.
+   While the deal is being made, as the price is typed:
+   - the full price of what is in it, and what it costs to make;
+   - what the deal gives away, in dinars and as a percentage;
+   - the margin left at that price, in red below the target margin (`0105`) or
+     below cost;
+   - a suggested price: the lowest that keeps the target margin, rounded to a
+     clean number;
+   - for "any of a category", a range, from the cheapest choice to the dearest.
+
+   Only for those who may see costs (`cost.view`), as elsewhere.
 
 **Beyond the plans:** `docs/LIMITATIONS.md` lists many small "what it does
 not do" points for each part (most minor; the large ones are in plans 6, 7 and
